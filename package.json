@@ -1,0 +1,32 @@
+{
+  "name": "sage-client",
+  "version": "1.0.0",
+  "description": "Javascript client for SaGe interfaces",
+  "main": "src/client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Callidon/sage-client.git"
+  },
+  "keywords": [
+    "sage"
+  ],
+  "author": "Thomas Minier <thomas.minier@univ-nantes.fr>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Callidon/sage-client/issues"
+  },
+  "homepage": "https://github.com/Callidon/sage-client#readme",
+  "dependencies": {
+    "commander": "^2.15.1",
+    "readable-stream": "^2.3.6",
+    "request": "^2.85.0",
+    "sparqljs": "^2.0.3"
+  },
+  "devDependencies": {
+    "jest": "^22.4.3",
+    "standard": "^11.0.1"
+  }
+}
