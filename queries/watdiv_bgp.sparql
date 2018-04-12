@@ -1,0 +1,5 @@
+SELECT * WHERE {
+  ?s <http://schema.org/eligibleRegion> <http://db.uwaterloo.ca/~galuc/wsdbm/Country9> .
+  ?s <http://purl.org/goodrelations/includes> ?includes .
+  ?s <http://purl.org/goodrelations/validThrough> ?validity .
+}

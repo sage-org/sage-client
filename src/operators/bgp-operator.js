@@ -1,4 +1,4 @@
-/* file : bgp-operator.js
+/* file : nlj-operator.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier
@@ -24,22 +24,18 @@ SOFTWARE.
 
 'use strict'
 
-const { Readable } = require('stream')
+const { BufferedIterator } = require('asynciterator')
 
 /**
- * A BGPOperator is an iterator over the evaluation of a BGP against a SaGe interface
- * @extends Readable
+ * A BGPOperator is an iterator over the evaluation of a BGP against a NLJ/BGP interface
+ * @extends BufferedIterator
  * @author Thomas Minier
  */
-class BGPOperator extends Readable {
+class BGPOperator extends BufferedIterator {
   constructor (bgp, url, request) {
-    super({ objectMode: true })
-    this._bgp = {}
-    this._next = {}
-    bgp.forEach((triple, ind) => {
-      const key = `tp${ind}`
-      this._bgp[key] = triple
-    })
+    super()
+    this._bgp = bgp
+    this._next = null
     this._url = url
     this._bufferedValues = []
     this._httpClient = request
@@ -62,13 +58,14 @@ class BGPOperator extends Readable {
     return this._responseTimes.reduce((x, y) => x + y, 0) / this._responseTimes.length
   }
 
-  _flush () {
+  _flush (done) {
     if (this._bufferedValues.length > 0) {
       this._bufferedValues.forEach(b => this._push(b))
     }
+    done()
   }
 
-  _read (count) {
+  _read (count, done) {
     // try to find values previously downloaded
     while (count > 0 && this._bufferedValues.length > 0) {
       this._push(this._bufferedValues.shift())
@@ -76,28 +73,33 @@ class BGPOperator extends Readable {
     }
 
     // fetch more values from the server
-    if (count > 0) {
+    if (count <= 0) {
+      done()
+    } else {
       const qBody = {
-        bgp: this._bgp,
+        query: {
+          type: 'bgp',
+          bgp: this._bgp
+        },
         next: this._next
       }
 
       this._httpClient.post({ body: qBody }, (err, res, body) => {
         if (err !== null) {
           this.emit('error', err)
-          this._flush()
-          this.push(null)
+          this.close()
+          done()
         } else {
           this._bufferedValues = body.bindings.slice(0)
           // update overheads
           this._responseTimes.push(res.timings.end)
           this._overheads.push(body.stats.import + body.stats.export)
-          if (body.hasNext) {
+          if (body.next) {
             this._next = body.next
-            this._read(count)
+            this._read(count, done)
           } else {
-            this._flush()
-            this.push(null)
+            this.close()
+            done()
           }
         }
       })

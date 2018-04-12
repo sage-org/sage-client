@@ -20,8 +20,8 @@
   },
   "homepage": "https://github.com/Callidon/sage-client#readme",
   "dependencies": {
+    "asynciterator": "^1.1.1",
     "commander": "^2.15.1",
-    "readable-stream": "^2.3.6",
     "request": "^2.85.0",
     "sparqljs": "^2.0.3"
   },
