@@ -27,6 +27,7 @@ SOFTWARE.
 const optimizeQuery = require('./optimizer.js')
 const BGPOperator = require('../operators/bgp-operator.js')
 const ProjectionOperator = require('../operators/projection-operator.js')
+const OrderByOperator = require('../operators/orderby-operator.js')
 const request = require('request').forever({timeout: 1000, minSockets: 10})
 
 function buildPlan (query, url) {
@@ -35,6 +36,9 @@ function buildPlan (query, url) {
   let operator = new BGPOperator(bgp, url, request)
   if (plan.variables) {
     operator = new ProjectionOperator(operator, plan.variables)
+  }
+  if (plan.order) {
+    operator = new OrderByOperator(operator, plan.order.map(v => v.expression))
   }
   if (plan.offset > 0) {
     operator = operator.skip(plan.offset)

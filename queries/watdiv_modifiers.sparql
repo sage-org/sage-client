@@ -3,5 +3,6 @@ SELECT * WHERE {
   ?s <http://purl.org/goodrelations/includes> ?includes .
   ?s <http://purl.org/goodrelations/validThrough> ?validity .
 }
-LIMIT 100
+ORDER BY ?includes
+LIMIT 10
 OFFSET 5

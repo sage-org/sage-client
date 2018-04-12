@@ -22,6 +22,7 @@
   "dependencies": {
     "asynciterator": "^1.1.1",
     "commander": "^2.15.1",
+    "lodash": "^4.17.5",
     "request": "^2.85.0",
     "sparqljs": "^2.0.3"
   },
