@@ -28,9 +28,8 @@ const optimizeQuery = require('./optimizer.js')
 const BGPOperator = require('../operators/bgp-operator.js')
 const ProjectionOperator = require('../operators/projection-operator.js')
 const OrderByOperator = require('../operators/orderby-operator.js')
-const request = require('request').forever({timeout: 1000, minSockets: 10})
 
-function buildPlan (query, url) {
+function buildPlan (query, url, request) {
   const plan = optimizeQuery(query)
   const bgp = plan.where[0].triples
   let operator = new BGPOperator(bgp, url, request)

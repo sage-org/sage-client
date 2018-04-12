@@ -27,7 +27,7 @@ SOFTWARE.
 
 const fs = require('fs')
 const program = require('commander')
-const buildPlan = require('../src/engine/builder.js')
+const SageClient = require('../src/client.js')
 
 // Command line interface to execute queries
 program
@@ -59,7 +59,8 @@ if (program.query) {
 }
 
 let nbResults = 0
-let iterator = buildPlan(query, server)
+const client = new SageClient(server)
+let iterator = client.execute(query)
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
