@@ -26,12 +26,23 @@ SOFTWARE.
 
 const optimizeQuery = require('./optimizer.js')
 const BGPOperator = require('../operators/bgp-operator.js')
+const ProjectionOperator = require('../operators/projection-operator.js')
 const request = require('request').forever({timeout: 1000, minSockets: 10})
 
 function buildPlan (query, url) {
   const plan = optimizeQuery(query)
   const bgp = plan.where[0].triples
-  return new BGPOperator(bgp, url, request)
+  let operator = new BGPOperator(bgp, url, request)
+  if (plan.variables) {
+    operator = new ProjectionOperator(operator, plan.variables)
+  }
+  if (plan.offset > 0) {
+    operator = operator.skip(plan.offset)
+  }
+  if (plan.limit >= 0) {
+    operator = operator.take(plan.limit)
+  }
+  return operator
 }
 
 module.exports = buildPlan
