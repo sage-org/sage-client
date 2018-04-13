@@ -28,6 +28,7 @@ SOFTWARE.
 const fs = require('fs')
 const program = require('commander')
 const SageClient = require('../src/client.js')
+const JSONFormatter = require('../src/formatters/json-formatter.js')
 
 // Command line interface to execute queries
 program
@@ -36,6 +37,7 @@ program
   .option('-q, --query <query>', 'evaluates the given SPARQL query')
   .option('-f, --file <file>', 'evaluates the SPARQL query in the given file')
   .option('-t, --timeout <timeout>', 'set SPARQL query timeout in milliseconds (default: 30mn)', 30 * 60 * 1000)
+  .option('t, --type <mime-type>', 'determines the MIME type of the output (e.g., application/json)', 'application/json')
   .parse(process.argv)
 
 // get servers
@@ -61,6 +63,7 @@ if (program.query) {
 let nbResults = 0
 const client = new SageClient(server)
 let iterator = client.execute(query)
+iterator = new JSONFormatter(iterator)
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
@@ -71,12 +74,12 @@ iterator.on('end', () => {
   const endTime = Date.now()
   clearTimeout(timeout)
   const time = endTime - startTime
-  process.stdout.write(`SPARQL query evaluated in ${time / 1000}s (${nbResults} mappings)\n`)
+  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s (${nbResults} mappings)\n`)
 })
 const startTime = Date.now()
 iterator.on('data', data => {
   nbResults++
-  process.stdout.write(`${JSON.stringify(data, Object.keys(data).sort())}\n`)
+  process.stdout.write(data)
 })
 
 // set query timeout

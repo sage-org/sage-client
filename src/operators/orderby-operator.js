@@ -39,12 +39,13 @@ class OrderByOperator extends BufferedIterator {
    * @param {AsyncIterator} source - The source operator
    * @param {string[]} variables - List of variables to sort by
    */
-  constructor (source, variables) {
+  constructor (source, variables, descending = false) {
     super()
     this._variables = variables
     this._bufferedValues = []
     this._readingFromSource = false
     this._isSorted = false
+    this._descending = false
     this._source = source
   }
 
@@ -67,7 +68,11 @@ class OrderByOperator extends BufferedIterator {
       if (this._isSorted && this._bufferedValues.length === 0) {
         this.close()
       } else if (this._isSorted) {
-        this._push(this._bufferedValues.shift())
+        if (this._descending) {
+          this._push(this._bufferedValues.pop())
+        } else {
+          this._push(this._bufferedValues.shift())
+        }
       }
       done()
     }

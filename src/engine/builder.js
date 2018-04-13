@@ -31,13 +31,28 @@ const OrderByOperator = require('../operators/orderby-operator.js')
 
 function buildPlan (query, url, request) {
   const plan = optimizeQuery(query)
-  const bgp = plan.where[0].triples
-  let operator = new BGPOperator(bgp, url, request)
+  let bgp = []
+  let optionals = { triples: [] }
+  plan.where.forEach(group => {
+    switch (group.type) {
+      case 'bgp':
+        bgp = bgp.concat(group.triples)
+        break
+      case 'optional':
+        group.patterns.forEach(p => {
+          optionals.triples = optionals.triples.concat(p.triples)
+        })
+        break
+      default:
+        break
+    }
+  })
+  let operator = new BGPOperator(bgp, optionals.triples, url, request)
   if (plan.variables) {
     operator = new ProjectionOperator(operator, plan.variables)
   }
   if (plan.order) {
-    operator = new OrderByOperator(operator, plan.order.map(v => v.expression))
+    operator = new OrderByOperator(operator, plan.order.map(v => v.expression), plan.order[0].descending)
   }
   if (plan.offset > 0) {
     operator = operator.skip(plan.offset)
