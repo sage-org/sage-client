@@ -28,26 +28,17 @@ const optimizeQuery = require('./optimizer.js')
 const BGPOperator = require('../operators/bgp-operator.js')
 const ProjectionOperator = require('../operators/projection-operator.js')
 const OrderByOperator = require('../operators/orderby-operator.js')
+const UnionOperator = require('../operators/union-operator.js')
 
 function buildPlan (query, url, request) {
   const plan = optimizeQuery(query)
-  let bgp = []
-  let optionals = { triples: [] }
-  plan.where.forEach(group => {
-    switch (group.type) {
-      case 'bgp':
-        bgp = bgp.concat(group.triples)
-        break
-      case 'optional':
-        group.patterns.forEach(p => {
-          optionals.triples = optionals.triples.concat(p.triples)
-        })
-        break
-      default:
-        break
-    }
-  })
-  let operator = new BGPOperator(bgp, optionals.triples, url, request)
+  let operator = null
+  if (plan.where[0].type !== 'union') {
+    operator = buildGroupPlan(plan.where, url, request)
+  } else {
+    const sources = plan.where[0].patterns.map(g => buildGroupPlan(g, url, request))
+    operator = new UnionOperator(...sources)
+  }
   if (plan.variables) {
     operator = new ProjectionOperator(operator, plan.variables)
   }
@@ -61,6 +52,26 @@ function buildPlan (query, url, request) {
     operator = operator.take(plan.limit)
   }
   return operator
+}
+
+function buildGroupPlan (groups, url, request) {
+  let bgp = []
+  let optionals = { triples: [] }
+  groups.forEach(group => {
+    switch (group.type) {
+      case 'bgp':
+        bgp = bgp.concat(group.triples)
+        break
+      case 'optional':
+        group.patterns.forEach(p => {
+          optionals.triples = optionals.triples.concat(p.triples)
+        })
+        break
+      default:
+        break
+    }
+  })
+  return new BGPOperator(bgp, optionals.triples, url, request)
 }
 
 module.exports = buildPlan
