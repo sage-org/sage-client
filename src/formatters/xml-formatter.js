@@ -30,6 +30,7 @@ const { compact, map } = require('lodash')
 
 /**
  * A Formatter that format solution bindings into SPARQL Query Results XML Format
+ * @see https://www.w3.org/TR/rdf-sparql-XMLres/
  * @extends Formatter
  * @author Thomas Minier
  */

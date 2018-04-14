@@ -1,4 +1,4 @@
-/* file : json-formatter.js
+/* file : xml-formatter.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier
@@ -25,20 +25,62 @@ SOFTWARE.
 'use strict'
 
 const Formatter = require('./formatter.js')
+const { parseBinding } = require('./utils.js')
+const { compact, map } = require('lodash')
 
 /**
- * A Formatter that format solution mappings into JSON
- * @extends JSONFormatter
+ * A Formatter that format solution bindings into SPARQL Query Results JSON Format
+ * @see https://www.w3.org/TR/sparql11-results-json/
+ * @extends Formatter
  * @author Thomas Minier
  */
 class JSONFormatter extends Formatter {
   /**
-   * Format mappings
-   * @param  {Object} mappings - Bag of solution mappings to format
+   * Constructor
+   * @param {AsyncIterator} source - Source iterator
+   * @param {string[]} variables - Projection variables of the SPARQL query
+   */
+  constructor (source, variables) {
+    super(source)
+    this._variables = variables
+  }
+
+  _prepend () {
+    let header = '{\n\t"head": {\n\t\t"vars": [ '
+    header += this._variables.map(v => `"${v}"`).join(', ')
+    header += ' ]\n\t},\n\t"results": {\n\t\t"bindings": [\n'
+    return header
+  }
+
+  _append () {
+    return '\t\t]\n\t}\n}\n'
+  }
+
+  /**
+   * Format bindings
+   * @abstract
+   * @param  {Object} bindings - Bag of solution bindings to format
    * @return {void}
    */
-  _format (mappings) {
-    return `${JSON.stringify(mappings, Object.keys(mappings).sort())}\n`
+  _format (bindings) {
+    let result = '\t\t\t{\n'
+    result += compact(map(bindings, (b, v) => {
+      const binding = parseBinding(v, b)
+      switch (binding.type) {
+        case 'iri':
+          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "uri" , "value": "${binding.value}"\n\t\t\t\t}`
+        case 'literal':
+          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}"\n\t\t\t\t}`
+        case 'literal+type':
+          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "datatype": "${binding.datatype}"\n\t\t\t\t}`
+        case 'literal+lang':
+          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "xml:lang": "${binding.lang}"\n\t\t\t\t}`
+        default:
+          return null
+      }
+    })).join(',\n')
+    result += '\n\t\t\t},\n'
+    return result
   }
 }
 
