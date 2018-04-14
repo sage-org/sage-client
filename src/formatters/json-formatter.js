@@ -43,6 +43,7 @@ class JSONFormatter extends Formatter {
   constructor (source, variables) {
     super(source)
     this._variables = variables
+    this._firstValue = true
   }
 
   _prepend () {
@@ -53,7 +54,7 @@ class JSONFormatter extends Formatter {
   }
 
   _append () {
-    return '\t\t]\n\t}\n}\n'
+    return '\n\t\t]\n\t}\n}\n'
   }
 
   /**
@@ -63,7 +64,11 @@ class JSONFormatter extends Formatter {
    * @return {void}
    */
   _format (bindings) {
-    let result = '\t\t\t{\n'
+    let result = ',\n\t\t\t{\n'
+    if (this._firstValue) {
+      result = '\t\t\t{\n'
+      this._firstValue = false
+    }
     result += compact(map(bindings, (b, v) => {
       const binding = parseBinding(v, b)
       switch (binding.type) {
@@ -79,7 +84,7 @@ class JSONFormatter extends Formatter {
           return null
       }
     })).join(',\n')
-    result += '\n\t\t\t},\n'
+    result += '\n\t\t\t}'
     return result
   }
 }
