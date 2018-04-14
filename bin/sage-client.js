@@ -29,6 +29,16 @@ const fs = require('fs')
 const program = require('commander')
 const SageClient = require('../src/client.js')
 const JSONFormatter = require('../src/formatters/json-formatter.js')
+const XMLFormatter = require('../src/formatters/xml-formatter.js')
+
+const mimetypes = {
+  'application/json': JSONFormatter,
+  'application/sparql-results+json': JSONFormatter,
+  'json': JSONFormatter,
+  'application/xml': XMLFormatter,
+  'application/sparql-results+xml': XMLFormatter,
+  'xml': XMLFormatter
+}
 
 // Command line interface to execute queries
 program
@@ -36,8 +46,8 @@ program
   .usage('<server> [options]')
   .option('-q, --query <query>', 'evaluates the given SPARQL query')
   .option('-f, --file <file>', 'evaluates the SPARQL query in the given file')
-  .option('-t, --timeout <timeout>', 'set SPARQL query timeout in milliseconds (default: 30mn)', 30 * 60 * 1000)
-  .option('t, --type <mime-type>', 'determines the MIME type of the output (e.g., application/json)', 'application/json')
+  // .option('-t, --timeout <timeout>', 'set SPARQL query timeout in milliseconds (default: 30mn)', 30 * 60 * 1000)
+  .option('-t, --type <mime-type>', 'determines the MIME type of the output (e.g., application/json)', 'application/json')
   .parse(process.argv)
 
 // get servers
@@ -50,7 +60,7 @@ const server = program.args[0]
 
 // fetch SPARQL query to execute
 let query = null
-let timeout = null
+// let timeout = null
 if (program.query) {
   query = program.query
 } else if (program.file && fs.existsSync(program.file)) {
@@ -60,10 +70,13 @@ if (program.query) {
   process.exit(1)
 }
 
-let nbResults = 0
 const client = new SageClient(server)
-let iterator = client.execute(query)
-iterator = new JSONFormatter(iterator)
+let { iterator, variables } = client.execute(query)
+if (program.type in mimetypes) {
+  iterator = new mimetypes[program.type](iterator, variables)
+} else {
+  iterator = new JSONFormatter(iterator, variables)
+}
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
@@ -72,18 +85,17 @@ iterator.on('error', error => {
 
 iterator.on('end', () => {
   const endTime = Date.now()
-  clearTimeout(timeout)
+  // clearTimeout(timeout)
   const time = endTime - startTime
-  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s (${nbResults} mappings)\n`)
+  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s (${iterator.cardinality} solution bindings)\n`)
 })
 const startTime = Date.now()
 iterator.on('data', data => {
-  nbResults++
   process.stdout.write(data)
 })
 
 // set query timeout
-timeout = setTimeout(() => {
-  iterator.close()
-  process.stderr.write(`TIMEOUT EXCEEDED (${program.timeout}ms) - shutting down query processing...\n`)
-}, program.timeout)
+// timeout = setTimeout(() => {
+//   iterator.close()
+//   process.stderr.write(`TIMEOUT EXCEEDED (${program.timeout}ms) - shutting down query processing...\n`)
+// }, program.timeout)

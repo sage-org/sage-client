@@ -27,30 +27,89 @@ SOFTWARE.
 const { TransformIterator } = require('asynciterator')
 
 /**
- * A Formatter format solution mappings into the specified format
+ * A Formatter format solution bindings into the specified format
  * @extends TransformIterator
  * @abstract
  * @author Thomas Minier
  */
 class Formatter extends TransformIterator {
+  constructor (source) {
+    super(source)
+    this._nbBindings = 0
+  }
+
+  get cardinality () {
+    return this._nbBindings
+  }
+
   /**
-   * Format mappings
-   * @param  {Object} mappings - Bag of solution mappings to format
+   * Implements this function to prepend data to the formatter before the first
+   * set of solution bindings is processed.
+   * @abstract
+   * @return {*} Data to prepend
+   */
+  _prepend () {
+    return null
+  }
+
+  /**
+   * Implements this function to append data to the formatter after the last
+   * set of solution bindings is processed.
+   * @abstract
+   * @return {*} Data to append
+   */
+  _append () {
+    return null
+  }
+
+  /**
+   * @private
+   * @param  {Function} done [description]
+   * @return {[type]}        [description]
+   */
+  _begin (done) {
+    super._begin(() => {
+      const startItem = this._prepend()
+      if (startItem !== null) {
+        this._push(startItem)
+      }
+      done()
+    })
+  }
+
+  /**
+   * @private
+   * @param  {Function} done [description]
+   * @return {[type]}        [description]
+   */
+  _flush (done) {
+    const endItem = this._append()
+    if (endItem !== null) {
+      this._push(endItem)
+    }
+    done()
+  }
+
+  /**
+   * Format bindings
+   * @abstract
+   * @param  {Object} bindings - Bag of solution bindings to format
    * @return {void}
    */
-  _format (mappings) {
-    return mappings.toString()
+  _format (bindings) {
+    return bindings.toString()
   }
 
   /**
    * [_transform description]
    * @private
-   * @param  {[type]}   mappings [description]
+   * @param  {[type]}   bindings [description]
    * @param  {Function} done     [description]
    * @return {void}
    */
-  _transform (mappings, done) {
-    this._push(this._format(mappings))
+  _transform (bindings, done) {
+    this._nbBindings++
+    this._push(this._format(bindings))
     done()
   }
 }

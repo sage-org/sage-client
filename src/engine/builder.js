@@ -51,7 +51,10 @@ function buildPlan (query, url, request) {
   if (plan.limit >= 0) {
     operator = operator.take(plan.limit)
   }
-  return operator
+  return {
+    iterator: operator,
+    variables: plan.variables
+  }
 }
 
 function buildGroupPlan (groups, url, request) {
