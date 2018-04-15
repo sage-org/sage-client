@@ -56,10 +56,11 @@ class ProjectionOperator extends TransformIterator {
    * @param {string[]} variables - The variables of the projection
    * @param {Object} options - Options passed to iterator
    */
-  constructor (source, variables, options = {}) {
-    super(source, options)
+  constructor (source, variables, spy = null) {
+    super(source)
     this._variables = variables
     this._selectAll = this._variables[0] === '*'
+    this._spy = spy
     source.on('error', err => this.emit('error', err))
   }
 
@@ -75,6 +76,7 @@ class ProjectionOperator extends TransformIterator {
     } else {
       this._push(pick(mappings, this._variables))
     }
+    if (this._spy !== null) this._spy.reportSolution()
     done()
   }
 }

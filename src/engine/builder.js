@@ -29,18 +29,20 @@ const BGPOperator = require('../operators/bgp-operator.js')
 const ProjectionOperator = require('../operators/projection-operator.js')
 const OrderByOperator = require('../operators/orderby-operator.js')
 const UnionOperator = require('../operators/union-operator.js')
+const Spy = require('./spy.js')
 
 function buildPlan (query, url, request) {
   const plan = optimizeQuery(query)
+  const spy = new Spy()
   let operator = null
   if (plan.where[0].type !== 'union') {
-    operator = buildGroupPlan(plan.where, url, request)
+    operator = buildGroupPlan(plan.where, url, request, spy)
   } else {
     const sources = plan.where[0].patterns.map(g => buildGroupPlan(g, url, request))
     operator = new UnionOperator(...sources)
   }
   if (plan.variables) {
-    operator = new ProjectionOperator(operator, plan.variables)
+    operator = new ProjectionOperator(operator, plan.variables, spy)
   }
   if (plan.order) {
     operator = new OrderByOperator(operator, plan.order.map(v => v.expression), plan.order[0].descending)
@@ -53,11 +55,12 @@ function buildPlan (query, url, request) {
   }
   return {
     iterator: operator,
-    variables: plan.variables
+    variables: plan.variables,
+    spy
   }
 }
 
-function buildGroupPlan (groups, url, request) {
+function buildGroupPlan (groups, url, request, spy = null) {
   let bgp = []
   let optionals = { triples: [] }
   groups.forEach(group => {
@@ -74,7 +77,7 @@ function buildGroupPlan (groups, url, request) {
         break
     }
   })
-  return new BGPOperator(bgp, optionals.triples, url, request)
+  return new BGPOperator(bgp, optionals.triples, url, request, spy)
 }
 
 module.exports = buildPlan

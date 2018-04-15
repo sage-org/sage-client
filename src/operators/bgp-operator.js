@@ -32,7 +32,7 @@ const { BufferedIterator } = require('asynciterator')
  * @author Thomas Minier
  */
 class BGPOperator extends BufferedIterator {
-  constructor (bgp, optionals, url, request) {
+  constructor (bgp, optionals, url, request, spy = null) {
     super()
     this._bgp = bgp
     this._optionals = optionals
@@ -47,16 +47,7 @@ class BGPOperator extends BufferedIterator {
         gzip: true,
         time: true
       })
-    this._responseTimes = []
-    this._overheads = []
-  }
-
-  get avgOverhead () {
-    return this._overheads.reduce((x, y) => x + y, 0) / this._overheads.length
-  }
-
-  get avgResponseTime () {
-    return this._responseTimes.reduce((x, y) => x + y, 0) / this._responseTimes.length
+    this._spy = spy
   }
 
   _flush (done) {
@@ -87,6 +78,7 @@ class BGPOperator extends BufferedIterator {
       }
 
       this._httpClient.post({ body: qBody }, (err, res, body) => {
+        if (this._spy !== null) this._spy.reportHTTPRequest()
         if (err !== null) {
           this.emit('error', err)
           this.close()
@@ -94,8 +86,10 @@ class BGPOperator extends BufferedIterator {
         } else {
           this._bufferedValues = body.bindings.slice(0)
           // update overheads
-          this._responseTimes.push(res.timings.end)
-          this._overheads.push(body.stats.import + body.stats.export)
+          if (this._spy !== null) {
+            this._spy.reportHTTPResponseTime(res.timings.end)
+            this._spy.reportOverhead(body.stats.import + body.stats.export)
+          }
           if (body.next) {
             this._next = body.next
             this._read(count, done)
