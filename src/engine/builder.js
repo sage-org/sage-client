@@ -38,7 +38,8 @@ function buildPlan (query, url, request) {
   if (plan.where[0].type !== 'union') {
     operator = buildGroupPlan(plan.where, url, request, spy)
   } else {
-    const sources = plan.where[0].patterns.map(g => buildGroupPlan(g, url, request))
+    // const sources = buildGroupPlan(plan.where[0].patterns, url, request, spy)
+    const sources = plan.where[0].patterns.map(p => buildGroupPlan(p.patterns, url, request, spy))
     operator = new UnionOperator(...sources)
   }
   if (plan.variables) {
@@ -63,6 +64,7 @@ function buildPlan (query, url, request) {
 function buildGroupPlan (groups, url, request, spy = null) {
   let bgp = []
   let optionals = { triples: [] }
+  let filters = []
   groups.forEach(group => {
     switch (group.type) {
       case 'bgp':
@@ -72,6 +74,9 @@ function buildGroupPlan (groups, url, request, spy = null) {
         group.patterns.forEach(p => {
           optionals.triples = optionals.triples.concat(p.triples)
         })
+        break
+      case 'filter':
+        filters.push(group.expression)
         break
       default:
         break

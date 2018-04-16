@@ -25,6 +25,7 @@
     "lodash": "^4.17.5",
     "n3": "^0.11.3",
     "request": "^2.85.0",
+    "sparql-optimizer": "git+https://github.com/Callidon/sparql-optimizer.git",
     "sparqljs": "^2.0.3"
   },
   "devDependencies": {

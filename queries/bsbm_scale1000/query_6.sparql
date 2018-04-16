@@ -5,7 +5,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT DISTINCT ?product ?label ?propertyTextual
 WHERE {
-    { 
+    {
        ?product rdfs:label ?label .
        ?product rdf:type <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductType138> .
        ?product bsbm:productFeature <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature4305> .
@@ -20,8 +20,8 @@ WHERE {
 	   ?product bsbm:productFeature <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature1444> .
        ?product bsbm:productPropertyTextual1 ?propertyTextual .
 	   ?product bsbm:productPropertyNumeric2 ?p2 .
-	   FILTER ( ?p2> 488 ) 
-    } 
+	   FILTER ( ?p2> 488 )
+    }
 }
 ORDER BY ?label
 OFFSET 5

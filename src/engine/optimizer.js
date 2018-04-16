@@ -24,13 +24,12 @@ SOFTWARE.
 
 'use strict'
 
-const { Parser } = require('sparqljs')
+// const { Parser } = require('sparqljs')
+const { DefaultOptimizer } = require('sparql-optimizer')
 
 function optimizeQuery (query) {
-  const parser = new Parser()
-  const parsedQuery = parser.parse(query)
-
-  return parsedQuery
+  const optimizer = new DefaultOptimizer()
+  return optimizer.optimize(query, false)
 }
 
 module.exports = optimizeQuery
