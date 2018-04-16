@@ -9,14 +9,13 @@ WHERE {
     ?product a <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductType87> .
 	?product bsbm:productFeature <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature541> .
 	?product bsbm:productPropertyNumeric1 ?p1 .
-	FILTER ( ?p1 > 156 ) 
+	FILTER ( ?p1 > 156 )
 	?product bsbm:productPropertyNumeric3 ?p3 .
 	FILTER (?p3 < 152 )
-    OPTIONAL { 
+    OPTIONAL {
         ?product bsbm:productFeature <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature553> .
         ?product rdfs:label ?testVar }
-    FILTER (!bound(?testVar)) 
+    FILTER (!bound(?testVar))
 }
 ORDER BY ?label
 LIMIT 10
-

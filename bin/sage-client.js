@@ -87,7 +87,7 @@ iterator.on('end', () => {
   const endTime = Date.now()
   // clearTimeout(timeout)
   const time = endTime - startTime
-  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s) (${spy.nbResults} solution bindings)\n`)
+  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s) (${iterator.cardinality} solution bindings)\n`)
 })
 const startTime = Date.now()
 iterator.on('data', data => {

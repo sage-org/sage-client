@@ -29,6 +29,7 @@ const BGPOperator = require('../operators/bgp-operator.js')
 const ProjectionOperator = require('../operators/projection-operator.js')
 const OrderByOperator = require('../operators/orderby-operator.js')
 const UnionOperator = require('../operators/union-operator.js')
+const DistinctOperator = require('../operators/distinct-operator.js')
 const Spy = require('./spy.js')
 
 function buildPlan (query, url, request) {
@@ -48,6 +49,9 @@ function buildPlan (query, url, request) {
   }
   if (plan.order) {
     operator = new OrderByOperator(operator, plan.order.map(v => v.expression), plan.order[0].descending)
+  }
+  if (plan.distinct) {
+    operator = new DistinctOperator(operator)
   }
   if (plan.offset > 0) {
     operator = operator.skip(plan.offset)
