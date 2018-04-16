@@ -33,6 +33,7 @@ const Spy = require('./spy.js')
 
 function buildPlan (query, url, request) {
   const plan = optimizeQuery(query)
+  // console.log(JSON.stringify(plan, false, 2));
   const spy = new Spy()
   let operator = null
   if (plan.where[0].type !== 'union') {
@@ -63,8 +64,10 @@ function buildPlan (query, url, request) {
 
 function buildGroupPlan (groups, url, request, spy = null) {
   let bgp = []
-  let optionals = { triples: [] }
+  let optionals = []
   let filters = []
+  // NB: We suppose that a SPARQL group can only contains BGP, OPTIONAL and FILTER
+  // clauses after query rewriting
   groups.forEach(group => {
     switch (group.type) {
       case 'bgp':
@@ -72,7 +75,16 @@ function buildGroupPlan (groups, url, request, spy = null) {
         break
       case 'optional':
         group.patterns.forEach(p => {
-          optionals.triples = optionals.triples.concat(p.triples)
+          switch (p.type) {
+            case 'bgp':
+              optionals = optionals.concat(p.triples)
+              break
+            case 'filter':
+              filters.push(group.expression)
+              break
+            default:
+              break
+          }
         })
         break
       case 'filter':
@@ -82,7 +94,7 @@ function buildGroupPlan (groups, url, request, spy = null) {
         break
     }
   })
-  return new BGPOperator(bgp, optionals.triples, url, request, spy)
+  return new BGPOperator(bgp, optionals, url, request, spy)
 }
 
 module.exports = buildPlan
