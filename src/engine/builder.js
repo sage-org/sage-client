@@ -84,7 +84,7 @@ function buildGroupPlan (groups, url, request, spy = null) {
               optionals = optionals.concat(p.triples)
               break
             case 'filter':
-              filters.push(group.expression)
+              filters.push(p.expression)
               break
             default:
               break
@@ -98,7 +98,7 @@ function buildGroupPlan (groups, url, request, spy = null) {
         break
     }
   })
-  return new BGPOperator(bgp, optionals, url, request, spy)
+  return new BGPOperator(bgp, optionals, filters, url, request, spy)
 }
 
 module.exports = buildPlan

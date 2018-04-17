@@ -32,10 +32,11 @@ const { BufferedIterator } = require('asynciterator')
  * @author Thomas Minier
  */
 class BGPOperator extends BufferedIterator {
-  constructor (bgp, optionals, url, request, spy = null) {
+  constructor (bgp, optionals, filters, url, request, spy = null) {
     super()
     this._bgp = bgp
     this._optionals = optionals
+    this._filters = filters
     this._next = null
     this._url = url
     this._bufferedValues = []
@@ -72,7 +73,8 @@ class BGPOperator extends BufferedIterator {
         query: {
           type: 'bgp',
           bgp: this._bgp,
-          optional: this._optionals
+          optional: this._optionals,
+          filters: this._filters
         },
         next: this._next
       }
