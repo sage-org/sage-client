@@ -71,11 +71,13 @@ if (program.query) {
 }
 
 const client = new SageClient(server)
-let { iterator, variables, spy } = client.execute(query)
-if (program.type in mimetypes) {
-  iterator = new mimetypes[program.type](iterator, variables)
-} else {
-  iterator = new JSONFormatter(iterator, variables)
+let { queryType, iterator, variables, spy } = client.execute(query)
+if (queryType === 'SELECT') {
+  if (program.type in mimetypes) {
+    iterator = new mimetypes[program.type](iterator, variables)
+  } else {
+    iterator = new JSONFormatter(iterator, variables)
+  }
 }
 
 iterator.on('error', error => {
@@ -87,7 +89,7 @@ iterator.on('end', () => {
   const endTime = Date.now()
   // clearTimeout(timeout)
   const time = endTime - startTime
-  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s) (${iterator.cardinality} solution bindings)\n`)
+  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s) (${iterator.cardinality} solutions)\n`)
 })
 const startTime = Date.now()
 iterator.on('data', data => {
