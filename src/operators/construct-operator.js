@@ -27,34 +27,7 @@ SOFTWARE.
 const { TransformIterator } = require('asynciterator')
 const { Writer } = require('n3')
 const { compact } = require('lodash')
-
-/**
- * Return a high-order function to apply bindings to a given triple pattern
- * @param  {Object} triple   - A triple pattern on which bindings will be inkected
- * @return {function} Function callbale with a set of bindings,
- * which returns `null` if no substitution was found, otheriwse returns a RDF triple
- */
-function applyBindings (triple) {
-  const subjVar = triple.subject.startsWith('?')
-  const predVar = triple.predicate.startsWith('?')
-  const objVar = triple.object.startsWith('?')
-  return bindings => {
-    const newTriple = Object.assign({}, triple)
-    if (subjVar) {
-      if (!(triple.subject in bindings)) return null
-      newTriple.subject = bindings[triple.subject]
-    }
-    if (predVar) {
-      if (!(triple.predicate in bindings)) return null
-      newTriple.predicate = bindings[triple.predicate]
-    }
-    if (objVar) {
-      if (!(triple.object in bindings)) return null
-      newTriple.object = bindings[triple.object]
-    }
-    return newTriple
-  }
-}
+const { applyBindings } = require('../utils.js')
 
 /**
  * A ConstructOperator transform solution mappings into RDF triples, according to a template

@@ -27,6 +27,7 @@ SOFTWARE.
 const optimizeQuery = require('./optimizer.js')
 const AskOperator = require('../operators/ask-operator.js')
 const ConstructOperator = require('../operators/construct-operator.js')
+const DescribeOperator = require('../operators/describe-operator.js')
 const BGPOperator = require('../operators/bgp-operator.js')
 const ProjectionOperator = require('../operators/projection-operator.js')
 const OrderByOperator = require('../operators/orderby-operator.js')
@@ -46,7 +47,7 @@ function buildPlan (query, url, request) {
     const sources = plan.where[0].patterns.map(p => buildGroupPlan(p.patterns, url, request, spy))
     operator = new UnionOperator(...sources)
   }
-  if (plan.variables) {
+  if (plan.variables && plan.queryType !== 'DESCRIBE') {
     operator = new ProjectionOperator(operator, plan.variables, spy)
   }
   if (plan.order) {
@@ -65,6 +66,8 @@ function buildPlan (query, url, request) {
     operator = new ConstructOperator(operator, plan.template)
   } else if (plan.queryType === 'ASK') {
     operator = new AskOperator(operator)
+  } else if (plan.queryType === 'DESCRIBE') {
+    operator = new DescribeOperator(operator, plan.variables, url, request, spy)
   }
   return {
     queryType: plan.queryType,
