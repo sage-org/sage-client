@@ -25,6 +25,7 @@ SOFTWARE.
 'use strict'
 
 const optimizeQuery = require('./optimizer.js')
+const AskOperator = require('../operators/ask-operator.js')
 const ConstructOperator = require('../operators/construct-operator.js')
 const BGPOperator = require('../operators/bgp-operator.js')
 const ProjectionOperator = require('../operators/projection-operator.js')
@@ -62,6 +63,8 @@ function buildPlan (query, url, request) {
   }
   if (plan.queryType === 'CONSTRUCT') {
     operator = new ConstructOperator(operator, plan.template)
+  } else if (plan.queryType === 'ASK') {
+    operator = new AskOperator(operator)
   }
   return {
     queryType: plan.queryType,
