@@ -48,7 +48,7 @@ class JSONFormatter extends Formatter {
 
   _prepend () {
     let header = '{\n\t"head": {\n\t\t"vars": [ '
-    header += this._variables.map(v => `"${v}"`).join(', ')
+    header += this._variables.map(v => `"${v.substr(1)}"`).join(', ')
     header += ' ]\n\t},\n\t"results": {\n\t\t"bindings": [\n'
     return header
   }
@@ -73,13 +73,13 @@ class JSONFormatter extends Formatter {
       const binding = parseBinding(v, b)
       switch (binding.type) {
         case 'iri':
-          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "uri" , "value": "${binding.value}"\n\t\t\t\t}`
+          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "uri" , "value": "${binding.value}"\n\t\t\t\t}`
         case 'literal':
-          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}"\n\t\t\t\t}`
+          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}"\n\t\t\t\t}`
         case 'literal+type':
-          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "datatype": "${binding.datatype}"\n\t\t\t\t}`
+          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "datatype": "${binding.datatype}"\n\t\t\t\t}`
         case 'literal+lang':
-          return `\t\t\t\t"${binding.variable}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "xml:lang": "${binding.lang}"\n\t\t\t\t}`
+          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "xml:lang": "${binding.lang}"\n\t\t\t\t}`
         default:
           return null
       }
