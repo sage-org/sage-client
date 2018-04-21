@@ -47,14 +47,16 @@ function pick (obj, properties) {
 /**
  * ProjectionOperator applies a SELECT operation (i.e. a projection) on the output of another iterator
  * @extends TransformIterator
+ * @memberof Operators
  * @author Thomas Minier
+ * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#modProjection}
  */
 class ProjectionOperator extends TransformIterator {
   /**
    * Constructor
+   * @memberof Operators
    * @param {AsyncIterator} source - The source iterator
    * @param {string[]} variables - The variables of the projection
-   * @param {Object} options - Options passed to iterator
    */
   constructor (source, variables, spy = null) {
     super(source)

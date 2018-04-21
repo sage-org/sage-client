@@ -32,11 +32,13 @@ const { compact, map } = require('lodash')
  * A Formatter that format solution bindings into SPARQL Query Results JSON Format
  * @see https://www.w3.org/TR/sparql11-results-json/
  * @extends Formatter
+ * @memberof Formatters
  * @author Thomas Minier
  */
 class JSONFormatter extends Formatter {
   /**
    * Constructor
+   * @memberof Formatters
    * @param {AsyncIterator} source - Source iterator
    * @param {string[]} variables - Projection variables of the SPARQL query
    */

@@ -31,11 +31,14 @@ const { sortBy } = require('lodash')
  * A OrderByOperator implements a ORDER BY clause, i.e.,
  * it sorts solution mappings produced by another operator
  * @extends BufferedIterator
+ * @memberof Operators
  * @author Thomas Minier
+ * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#modOrderBy}
  */
 class OrderByOperator extends BufferedIterator {
   /**
    * Constructor
+   * @memberof Operators
    * @param {AsyncIterator} source - The source operator
    * @param {string[]} variables - List of variables to sort by
    */

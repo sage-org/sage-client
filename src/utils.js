@@ -24,6 +24,8 @@ SOFTWARE.
 
 'use strict'
 
+const { Duplex, PassThrough } = require('stream')
+
 /**
  * Return a high-order function to apply bindings to a given triple pattern
  * @param  {Object} triple   - A triple pattern on which bindings will be inkected
@@ -52,6 +54,37 @@ function applyBindings (triple) {
   }
 }
 
+/**
+ * A MultiTransform is a Transform stream that uses intermediate Streams operators
+ * to transform items.
+ * @extends Duplex
+ * @author Thomas Minier
+ */
+class MultiTransform extends Duplex {
+  constructor () {
+    super({ readableObjectMode: true, writableObjectMode: true })
+    this._sources = []
+    this._index = 0
+  }
+
+  _createTransformer (item) {
+    return new PassThrough()
+  }
+
+  _write (item, encoding, done) {
+    const it = this._createTransformer(item)
+    this._sources.push(it)
+    done()
+  }
+
+  _read (count) {
+    const shouldContinue = this.push(this._sources[this._index].read())
+    this._index = (this._index + 1) % this._sources.length
+    if (shouldContinue) this._read(count)
+  }
+}
+
 module.exports = {
-  applyBindings
+  applyBindings,
+  MultiTransform
 }

@@ -32,11 +32,14 @@ const { applyBindings } = require('../utils.js')
 /**
  * A ConstructOperator transform solution mappings into RDF triples, according to a template
  * @extends TransformIterator
+ * @memberof Operators
  * @author Thomas Minier
+ * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#construct}
  */
 class ConstructOperator extends TransformIterator {
   /**
    * Constructor
+   * @memberof Operators
    * @param {AsyncIterator} source  - Source iterator
    * @param {Object[]} templates - Set of triples patterns in the CONSTRUCT clause
    */
@@ -58,13 +61,6 @@ class ConstructOperator extends TransformIterator {
     return this._nbTriples
   }
 
-  /**
-   * Transform bindings into RDF triples
-   * @private
-   * @param  {[type]}   bindings [description]
-   * @param  {Function} done     [description]
-   * @return {void}
-   */
   _transform (bindings, done) {
     compact(this._templates.map(f => f(bindings)))
       .forEach(t => {

@@ -29,7 +29,24 @@ const BGPOperator = require('./bgp-operator.js')
 const ConstructOperator = require('./construct-operator.js')
 const { compact } = require('lodash')
 
+/**
+ * A Describe operator evaluates DESCRIBE SPARQL queries.
+ * It produces a single result RDF graph containing RDF data about resources.
+ * @extends MultiTransformIterator
+ * @memberof Operators
+ * @author Thomas Minier
+ * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#describe}
+ */
 class DescribeOperator extends MultiTransformIterator {
+  /**
+   * Constructor
+   * @memberof Operators
+   * @param {AsyncIterator} source  - Source iterator
+   * @param {string[]} variables - Variables to describe
+   * @param {string} url - URL of the SaGe server to request
+   * @param {request} request - Request object used to perform HTTP requests
+   * @param {Spy} [spy=null] - Spy used to gather metadata about query execution
+   */
   constructor (source, variables, url, request, spy = null) {
     super(source)
     this._variables = variables
@@ -45,6 +62,10 @@ class DescribeOperator extends MultiTransformIterator {
     this._spy = spy
   }
 
+  /**
+   * Get the number of RDF triples produced by the operator
+   * @return {integer} The number of RDF triples produced by the operator
+   */
   get cardinality () {
     return null
   }

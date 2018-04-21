@@ -4,14 +4,18 @@
   "description": "Javascript client for SaGe interfaces",
   "main": "src/client.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard",
+    "test": "jest --notify"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Callidon/sage-client.git"
   },
   "keywords": [
-    "sage"
+    "sage",
+    "query engine",
+    "SPARQL query",
+    "preemptive SPARQL query execution"
   ],
   "author": "Thomas Minier <thomas.minier@univ-nantes.fr>",
   "license": "MIT",
@@ -31,5 +35,15 @@
   "devDependencies": {
     "jest": "^22.4.3",
     "standard": "^11.0.1"
+  },
+  "standard": {
+    "env": [
+      "node",
+      "jest"
+    ]
+  },
+  "jest": {
+    "verbose": true,
+    "testRegex": "tests/.*-test\\.js$"
   }
 }

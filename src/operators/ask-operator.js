@@ -27,14 +27,22 @@ SOFTWARE.
 const { TransformIterator } = require('asynciterator')
 
 /**
+ * @fileOverview This module contains physical SPARQL operators
+ * @module Operators
+ */
+
+/**
  * A AskOperator output True if a source iterator has solutions, false otherwise.
  * results are outputed following the SPARQL XML results format
  * @extends TransformIterator
+ * @memberof Operators
  * @author Thomas Minier
+ * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#ask}
  */
 class AskOperator extends TransformIterator {
   /**
    * Constructor
+   * @memberof Operators
    * @param {AsyncIterator} source - Source iterator
    */
   constructor (source) {

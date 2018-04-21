@@ -28,18 +28,15 @@ const { BufferedIterator } = require('asynciterator')
 const { isNull, pull, range } = require('lodash')
 
 /**
- * @fileOverview This module contains various utilities
- * @module Utils
- */
-
-/**
  * UnionOperator implements a Bag Union between N operators
  * @extends BufferedIterator
+ * @memberof Operators
  * @author Thomas Minier
  */
 class UnionOperator extends BufferedIterator {
   /**
    * Constructor
+   * @memberof Operators
    * @param {AsyncIterator[]} sources - The sources to read from
    */
   constructor (...sources) {

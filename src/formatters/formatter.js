@@ -27,12 +27,23 @@ SOFTWARE.
 const { TransformIterator } = require('asynciterator')
 
 /**
+ * @fileOverview This module contains results formatters
+ * @module Formatters
+ */
+
+/**
  * A Formatter format solution bindings into the specified format
  * @extends TransformIterator
  * @abstract
+ * @memberof Formatters
  * @author Thomas Minier
  */
 class Formatter extends TransformIterator {
+  /**
+   * Constructor
+   * @memberof Formatters
+   * @param {AsyncIterator} source - Source iterator
+   */
   constructor (source) {
     super(source)
     this._nbBindings = 0
@@ -64,8 +75,8 @@ class Formatter extends TransformIterator {
 
   /**
    * @private
-   * @param  {Function} done [description]
-   * @return {[type]}        [description]
+   * @param  {Function} done
+   * @return {void}
    */
   _begin (done) {
     super._begin(() => {
@@ -77,11 +88,6 @@ class Formatter extends TransformIterator {
     })
   }
 
-  /**
-   * @private
-   * @param  {Function} done [description]
-   * @return {[type]}        [description]
-   */
   _flush (done) {
     const endItem = this._append()
     if (endItem !== null) {
@@ -100,13 +106,6 @@ class Formatter extends TransformIterator {
     return bindings.toString()
   }
 
-  /**
-   * [_transform description]
-   * @private
-   * @param  {[type]}   bindings [description]
-   * @param  {Function} done     [description]
-   * @return {void}
-   */
   _transform (bindings, done) {
     this._nbBindings++
     this._push(this._format(bindings))

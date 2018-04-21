@@ -29,9 +29,20 @@ const { BufferedIterator } = require('asynciterator')
 /**
  * A BGPOperator is an iterator over the evaluation of a BGP against a NLJ/BGP interface
  * @extends BufferedIterator
+ * @memberof Operators
  * @author Thomas Minier
  */
 class BGPOperator extends BufferedIterator {
+  /**
+   * Constructor
+   * @memberof Operators
+   * @param {Object[]} bgp  - BGP to evaluate
+   * @param {Object[]} optionals  - Optional BGPs to evaluate
+   * @param {Object[]} filters  - Set of filters to evaluate
+   * @param {string} url  - URL of the SaGe server
+   * @param {request} request - HTTP client
+   * @param {Spy} [spy=null] - SPy used to gather metadata about query execution
+   */
   constructor (bgp, optionals, filters, url, request, spy = null) {
     super()
     this._bgp = bgp

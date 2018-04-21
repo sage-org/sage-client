@@ -30,16 +30,18 @@ const map = require('lodash/map')
 /**
  * DistinctOperator applies a DISTINCT modifier on the output of another operator.
  * @extends TransformIterator
+ * @memberof Operators
  * @author Thomas Minier
+ * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#modDuplicates}
  */
 class DistinctOperator extends TransformIterator {
   /**
    * Constructor
+   * @memberof Operators
    * @param {AsyncIterator} source - The source operator
-   * @param {Object} options - Options passed to iterator
    */
-  constructor (source, options = {}) {
-    super(source, options)
+  constructor (source) {
+    super(source)
     this._values = new Map()
   }
 
