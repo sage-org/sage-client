@@ -65,6 +65,11 @@ class ConstructOperator extends TransformIterator {
     compact(this._templates.map(f => f(bindings)))
       .forEach(t => {
         this._nbTriples++
+        // dirty fix for N3.js parsing bug with datatypes surounded by brackets
+        if (t.object.endsWith('>')) {
+          const startIndex = t.object.lastIndexOf('<')
+          t.object = t.object.substr(0, startIndex) + t.object.substr(startIndex + 1, t.object.length - startIndex - 2)
+        }
         this._push(this._writer.tripleToString(t.subject, t.predicate, t.object))
       })
     done()

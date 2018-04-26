@@ -92,8 +92,12 @@ class BGPOperator extends BufferedIterator {
 
       this._httpClient.post({ body: qBody }, (err, res, body) => {
         if (this._spy !== null) this._spy.reportHTTPRequest()
-        if (err) {
-          this.emit('error', err)
+        if (err || res.statusCode !== 200) {
+          if (err) {
+            this.emit('error', err)
+          } else {
+            this.emit('error', new Error(JSON.stringify(res.body)))
+          }
           this.close()
           done()
         } else {
