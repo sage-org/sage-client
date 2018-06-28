@@ -28,8 +28,8 @@ SOFTWARE.
 const fs = require('fs')
 const program = require('commander')
 // const SageClient = require('../src/client.js')
-const SageClient = require('../src/sparql-iterator.js')
-const FragmentsClient = require('ldf-client').FragmentsClient
+const SparqlIterator = require('../src/sparql-iterator.js')
+const SageClient = require('../src/utils/sage-request-client.js')
 const JSONFormatter = require('../src/formatters/json-formatter.js')
 const XMLFormatter = require('../src/formatters/xml-formatter.js')
 
@@ -59,7 +59,7 @@ if (program.args.length !== 1) {
 }
 
 const server = program.args[0]
-const fragmentsClient = new FragmentsClient(server)
+const client = new SageClient(server)
 
 // fetch SPARQL query to execute
 let query = null
@@ -73,7 +73,7 @@ if (program.query) {
   process.exit(1)
 }
 
-const iterator = new SageClient(query, { fragmentsClient })
+const iterator = new SparqlIterator(query, { client })
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')

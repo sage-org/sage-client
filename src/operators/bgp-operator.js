@@ -1,4 +1,4 @@
-/* file : nlj-operator.js
+/* file : bgp-operator.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier
@@ -24,99 +24,27 @@ SOFTWARE.
 
 'use strict'
 
-const { BufferedIterator } = require('asynciterator')
+const { MultiTransformIterator } = require('asynciterator')
+const SageOperator = require('./sage-operator.js')
+const rdf = require('ldf-client/lib/util/RdfUtil')
+const { assign, some, size } = require('lodash')
 
-/**
- * A BGPOperator is an iterator over the evaluation of a BGP against a NLJ/BGP interface
- * @extends BufferedIterator
- * @memberof Operators
- * @author Thomas Minier
- */
-class BGPOperator extends BufferedIterator {
-  /**
-   * Constructor
-   * @memberof Operators
-   * @param {Object[]} bgp  - BGP to evaluate
-   * @param {Object[]} optionals  - Optional BGPs to evaluate
-   * @param {Object[]} filters  - Set of filters to evaluate
-   * @param {string} url  - URL of the SaGe server
-   * @param {request} request - HTTP client
-   * @param {Spy} [spy=null] - SPy used to gather metadata about query execution
-   */
-  constructor (bgp, optionals, filters, url, request, spy = null) {
-    super()
+class BGPOperator extends MultiTransformIterator {
+  constructor (source, bgp, options) {
+    super(source, options)
     this._bgp = bgp
-    this._optionals = optionals
-    this._filters = filters
-    this._next = null
-    this._url = url
-    this._bufferedValues = []
-    this._httpClient = request
-      .defaults({
-        method: 'POST',
-        uri: this._url,
-        json: true,
-        gzip: true,
-        time: true
-      })
-    this._spy = spy
+    this._sageClient = options.client
   }
 
-  _flush (done) {
-    if (this._bufferedValues.length > 0) {
-      this._bufferedValues.forEach(b => this._push(b))
-    }
-    done()
-  }
-
-  _read (count, done) {
-    // try to find values previously downloaded
-    while (count > 0 && this._bufferedValues.length > 0) {
-      this._push(this._bufferedValues.shift())
-      count--
-    }
-
-    // fetch more values from the server
-    if (count <= 0) {
-      done()
-    } else {
-      const qBody = {
-        query: {
-          type: 'bgp',
-          bgp: this._bgp,
-          optional: this._optionals,
-          filters: this._filters
-        },
-        next: this._next
-      }
-
-      this._httpClient.post({ body: qBody }, (err, res, body) => {
-        if (this._spy !== null) this._spy.reportHTTPRequest()
-        if (err || res.statusCode !== 200) {
-          if (err) {
-            this.emit('error', err)
-          } else {
-            this.emit('error', new Error(JSON.stringify(res.body)))
-          }
-          this.close()
-          done()
-        } else {
-          this._bufferedValues = body.bindings.slice(0)
-          // update overheads
-          if (this._spy !== null) {
-            this._spy.reportHTTPResponseTime(res.timings.end)
-            this._spy.reportOverhead(body.stats.import + body.stats.export)
-          }
-          if (body.next) {
-            this._next = body.next
-            this._read(count, done)
-          } else {
-            this.close()
-            done()
-          }
-        }
+  _createTransformer (bindings) {
+    const boundedBGP = this._bgp.map(p => rdf.applyBindings(bindings, p))
+    const hasVars = boundedBGP.map(p => some(p, v => v.startsWith('?')))
+      .reduce((acc, v) => acc && v, true)
+    return new SageOperator(boundedBGP, this._sageClient)
+      .map(item => {
+        if (size(item) === 0 && hasVars) return null
+        return assign(item, bindings)
       })
-    }
   }
 }
 

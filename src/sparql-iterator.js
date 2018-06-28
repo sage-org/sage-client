@@ -4,7 +4,7 @@
 const SparqlParser = require('sparqljs').Parser
 const AsyncIterator = require('asynciterator')
 const TransformIterator = AsyncIterator.TransformIterator
-const ReorderingGraphPatternIterator = require('ldf-client/lib/triple-pattern-fragments/ReorderingGraphPatternIterator')
+const BGPOperator = require('./operators/bgp-operator.js')
 const UnionIterator = require('ldf-client/lib/sparql/UnionIterator')
 const SortIterator = require('ldf-client/lib/sparql/SortIterator')
 const DistinctIterator = require('ldf-client/lib/sparql/DistinctIterator')
@@ -183,7 +183,7 @@ function SparqlGroupIterator (source, group, options) {
 
   switch (group.type) {
     case 'bgp':
-      return new ReorderingGraphPatternIterator(source, group.triples, options)
+      return new BGPOperator(source, group.triples, options)
     case 'group':
       return new SparqlGroupsIterator(source, group.patterns, childOptions)
     case 'optional':
