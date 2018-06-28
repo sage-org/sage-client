@@ -5,7 +5,7 @@ const SparqlParser = require('sparqljs').Parser
 const AsyncIterator = require('asynciterator')
 const TransformIterator = AsyncIterator.TransformIterator
 const BGPOperator = require('./operators/bgp-operator.js')
-const UnionIterator = require('ldf-client/lib/sparql/UnionIterator')
+const UnionOperator = require('./operators/union-operator.js')
 const SortIterator = require('ldf-client/lib/sparql/SortIterator')
 const DistinctIterator = require('ldf-client/lib/sparql/DistinctIterator')
 const SparqlExpressionEvaluator = require('ldf-client/lib/util/SparqlExpressionEvaluator')
@@ -190,9 +190,9 @@ function SparqlGroupIterator (source, group, options) {
       childOptions = _.create(options, { optional: true })
       return new SparqlGroupsIterator(source, group.patterns, childOptions)
     case 'union':
-      return new UnionIterator(group.patterns.map(function (patternToken) {
+      return new UnionOperator(...group.patterns.map(function (patternToken) {
         return new SparqlGroupIterator(source.clone(), patternToken, childOptions)
-      }), options)
+      }))
     case 'filter':
     // A set of bindings does not match the filter
     // if it evaluates to 0/false, or errors

@@ -5,7 +5,8 @@
   "main": "src/client.js",
   "scripts": {
     "lint": "standard",
-    "test": "jest --notify"
+    "test": "jest --notify",
+    "browserify": "browserify sage-client.js -s sage -o sage-client-browser.js"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,7 @@
   "homepage": "https://github.com/Callidon/sage-client#readme",
   "dependencies": {
     "asynciterator": "^1.1.1",
+    "browserify": "^16.2.2",
     "commander": "^2.15.1",
     "ldf-client": "^2.0.5",
     "lodash": "^4.17.5",
