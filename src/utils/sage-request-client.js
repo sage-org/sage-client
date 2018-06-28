@@ -54,7 +54,6 @@ class SageRequestClient {
       },
       next
     }
-    console.log(queryBody);
     return new Promise((resolve, reject) => {
       this._httpClient.post({ body: queryBody }, (err, res, body) => {
         if (err || res.statusCode !== 200) {
