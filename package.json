@@ -26,7 +26,6 @@
   "homepage": "https://github.com/Callidon/sage-client#readme",
   "dependencies": {
     "asynciterator": "^1.1.1",
-    "browserify": "^16.2.2",
     "commander": "^2.15.1",
     "ldf-client": "^2.0.5",
     "lodash": "^4.17.5",
@@ -36,7 +35,8 @@
   },
   "devDependencies": {
     "jest": "^22.4.3",
-    "standard": "^11.0.1"
+    "standard": "^11.0.1",
+    "browserify": "^16.2.2"
   },
   "standard": {
     "env": [

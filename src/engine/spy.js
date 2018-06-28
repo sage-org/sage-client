@@ -34,6 +34,8 @@ class Spy {
     this._nbResults = 0
     this._responseTimes = []
     this._overheads = []
+    this._importTimes = []
+    this._exportTimes = []
     this._httpErrors = []
   }
 
@@ -51,6 +53,14 @@ class Spy {
 
   get avgOverhead () {
     return this._overheads.reduce((x, y) => x + y, 0) / this._overheads.length
+  }
+
+  get avgImportTime () {
+    return this._importTimes.reduce((x, y) => x + y, 0) / this._importTimes.length
+  }
+
+  get avgExportTime () {
+    return this._exportTimes.reduce((x, y) => x + y, 0) / this._exportTimes.length
   }
 
   get avgResponseTime () {
@@ -75,6 +85,14 @@ class Spy {
 
   reportOverhead (overhead) {
     this._overheads.push(overhead)
+  }
+
+  reportImportTime (importTime) {
+    this._importTimes.push(importTime)
+  }
+
+  reportExportTime (exportTime) {
+    this._exportTimes.push(exportTime)
   }
 }
 
