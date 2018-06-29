@@ -5,6 +5,8 @@ const SparqlParser = require('sparqljs').Parser
 const AsyncIterator = require('asynciterator')
 const TransformIterator = AsyncIterator.TransformIterator
 const BGPOperator = require('./operators/bgp-operator.js')
+const GroupByOperator = require('./operators/gb-operator.js')
+const AggrOperator = require('./operators/agg-operator.js')
 const UnionOperator = require('./operators/union-operator.js')
 const SortIterator = require('ldf-client/lib/sparql/SortIterator')
 const DistinctIterator = require('ldf-client/lib/sparql/DistinctIterator')
@@ -45,6 +47,7 @@ function SparqlIterator (source, query, options) {
     var graphIterator = new SparqlGroupsIterator(source,
       queryIterator.patterns || query.where, options)
 
+
     // Create iterators for each order
     for (var i = query.order && (query.order.length - 1); i >= 0; i--) {
       let order = new SparqlExpressionEvaluator(query.order[i].expression)
@@ -59,7 +62,29 @@ function SparqlIterator (source, query, options) {
         return 0
       }, options)
     }
+
+    if (query.group) {
+      for (var i = 0; i < query.group.length; i++) {
+        var gb = query.group[i];
+        graphIterator = new GroupByOperator(graphIterator,gb ,options);
+      }
+    }
+
+    for (var i = 0; i < query.variables.length; i++) {
+      var variable = query.variables[i];
+      if (variable.expression != null && typeof variable.expression != "string") {
+        if (query.group) {
+          graphIterator = new AggrOperator(graphIterator,variable);
+        }
+        else {
+          graphIterator = new GroupByOperator(graphIterator,"*" ,options);
+          graphIterator = new AggrOperator(graphIterator,variable);
+        }
+      }
+    }
+
     queryIterator.source = graphIterator
+
 
     // Create iterators for modifiers
     if (query.distinct) { queryIterator = new DistinctIterator(queryIterator, options) }
@@ -89,7 +114,17 @@ SparqlSelectIterator.prototype._transform = function (bindings, done) {
   this._push(this.getProperty('variables').reduce(function (row, variable) {
     // Project a simple variable by copying its value
     if (variable !== '*') {
-      row[variable] = valueOf(variable)
+      if (variable.expression != null) {
+        if (typeof variable.expression === "string") {
+          row[variable.variable] = valueOf(variable.expression);
+        }
+        else {
+          row[variable.variable] = valueOf(variable.variable);
+        }
+      }
+      else {
+        row[variable] = valueOf(variable)
+      }
     } else {
       // Project a star selector by copying all variable bindings
       for (variable in bindings) {
@@ -184,6 +219,8 @@ function SparqlGroupIterator (source, group, options) {
   switch (group.type) {
     case 'bgp':
       return new BGPOperator(source, group.triples, options)
+    case 'query':
+      return new SparqlIterator(source, group, options);
     case 'group':
       return new SparqlGroupsIterator(source, group.patterns, childOptions)
     case 'optional':
