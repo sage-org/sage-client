@@ -11,6 +11,7 @@ const UnionOperator = require('./operators/union-operator.js')
 const SortIterator = require('ldf-client/lib/sparql/SortIterator')
 const DistinctIterator = require('ldf-client/lib/sparql/DistinctIterator')
 const SparqlExpressionEvaluator = require('ldf-client/lib/util/SparqlExpressionEvaluator')
+const SageRequestClient = require('./utils/sage-request-client');
 const _ = require('lodash')
 const rdf = require('ldf-client/lib/util/RdfUtil')
 const createErrorType = require('ldf-client/lib/util/CustomError')
@@ -23,9 +24,10 @@ var queryConstructors = {
 }
 
 // Creates an iterator from a SPARQL query
-function SparqlIterator (source, query, options) {
+function SparqlIterator (source, query, options,url) {
   // Set argument defaults
   if (typeof source.read !== 'function') {
+    url = options
     options = query
     query = source
     source = null
@@ -33,10 +35,27 @@ function SparqlIterator (source, query, options) {
   options = options || {}
   source = source || AsyncIterator.single({})
 
+  if (options.servers != null) {
+    if (options.servers[url] != null) {
+      options.client = options.servers[url];
+    }
+    else {
+      options.servers[url] = new SageRequestClient(url,options.spy);
+      options.client = options.servers[url];
+    }
+  }
+  else {
+    options.servers = {};
+    options.servers[url] = new SageRequestClient(url,options.spy);
+    options.client = options.servers[url];
+  }
+
+
   // Transform the query into a cascade of iterators
   try {
     // Parse the query if needed
     if (typeof query === 'string') { query = new SparqlParser(options.prefixes).parse(query) }
+    options.prefixes = query.prefixes;
 
     // Create an iterator that projects the bindings according to the query type
     let queryIterator
@@ -220,7 +239,18 @@ function SparqlGroupIterator (source, group, options) {
     case 'bgp':
       return new BGPOperator(source, group.triples, options)
     case 'query':
-      return new SparqlIterator(source, group, options);
+      return new SparqlIterator(source, group, options, options.client._url);
+    case 'service':
+      var subquery = group.patterns[0];
+
+      if (subquery.type === "bgp") {
+        var tmpQuery = {prefixes : options.prefixes, queryType : "SELECT", variables : ["*"], type: "query", where : [subquery]}
+        var newQuery = tmpQuery;
+      }
+      else {
+        var newQuery = subquery;
+      }
+      return new SparqlIterator(source, newQuery,options, group.name)
     case 'group':
       return new SparqlGroupsIterator(source, group.patterns, childOptions)
     case 'optional':
