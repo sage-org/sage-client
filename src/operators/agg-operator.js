@@ -76,6 +76,11 @@ class AggrOperator extends TransformIterator {
         this._push(item);
         break;
 
+        case "avg":
+        item = this._doAvg(item);
+        this._push(item);
+        break;
+
         case "sample":
         item = this._doSample(item);
         this._push(item);
@@ -254,6 +259,58 @@ class AggrOperator extends TransformIterator {
     }
     else {
       item[alias] = (Math.max(...vals)).toString();
+    }
+    return item;
+  }
+
+  _doAvg (item){
+    var aggVar = this._variable.expression.expression;
+    var alias = this._variable.variable;
+    var dist = this._variable.expression.distinct;
+    var vals = [];
+    var notNumbers = false;
+    if (dist) {
+      var hash = {}
+      for (var i = 0; i < item.group.length; i++) {
+        var bindings = item.group[i];
+        if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
+          var val = bindings[aggVar];
+          if (val.startsWith("\"") || val.startsWith("'")) {
+            val = val.slice(1,-1);
+          }
+          if (isNaN(val)) {
+            notNumbers = true;
+          }
+          else {
+            hash[val] = true;
+            vals.push(val);
+          }
+        }
+      }
+    }
+    else {
+      for (var i = 0; i < item.group.length; i++) {
+        var bindings = item.group[i];
+        if (bindings[aggVar] != null) {
+          var val = bindings[aggVar];
+          if (val.startsWith("\"") || val.startsWith("'")) {
+            val = val.slice(1,-1);
+          }
+          if (isNaN(val)) {
+            notNumbers = true;
+          }
+          else {
+            vals.push(Number(val));
+          }
+        }
+      }
+    }
+    if (notNumbers) {
+      item[alias] = "null";
+    }
+    else {
+      var average = vals.reduce((a, b) => a + b) / vals.length;
+      item[alias] = average.toString();
     }
     return item;
   }
