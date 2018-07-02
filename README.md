@@ -23,3 +23,5 @@ JS client for the SaGe query engine
   * http://www.w3.org/2001/XMLSchema#integer
   * http://www.w3.org/2001/XMLSchema#double
   * bound
+  * isIRI, isBlank, isLiteral
+  * sameterm
