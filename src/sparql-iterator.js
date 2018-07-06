@@ -56,7 +56,6 @@ function SparqlIterator (source, query, options,url) {
     // Parse the query if needed
     if (typeof query === 'string') { query = new SparqlParser(options.prefixes).parse(query) }
     options.prefixes = query.prefixes;
-    console.log(query);
     // Create an iterator that projects the bindings according to the query type
     let queryIterator
     let QueryConstructor = queryConstructors[query.queryType]
