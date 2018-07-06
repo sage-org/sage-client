@@ -30,3 +30,4 @@ JS client for the SaGe query engine
   * Sequence '/'
   * Reverse '^'
   * Alterative '|'
+  * Negated '!'

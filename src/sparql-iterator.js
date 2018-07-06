@@ -88,15 +88,18 @@ function SparqlIterator (source, query, options,url) {
       }
     }
 
-    for (var i = 0; i < query.variables.length; i++) {
-      var variable = query.variables[i];
-      if (variable.expression != null && typeof variable.expression != "string") {
-        if (query.group) {
-          graphIterator = new AggrOperator(graphIterator,variable);
-        }
-        else {
-          graphIterator = new GroupByOperator(graphIterator,"*" ,options);
-          graphIterator = new AggrOperator(graphIterator,variable);
+    if (query.variables != null) {
+
+      for (var i = 0; i < query.variables.length; i++) {
+        var variable = query.variables[i];
+        if (variable.expression != null && typeof variable.expression != "string") {
+          if (query.group) {
+            graphIterator = new AggrOperator(graphIterator,variable);
+          }
+          else {
+            graphIterator = new GroupByOperator(graphIterator,"*" ,options);
+            graphIterator = new AggrOperator(graphIterator,variable);
+          }
         }
       }
     }
@@ -239,18 +242,39 @@ function SparqlGroupIterator (source, group, options) {
       var copyGroup = JSON.parse(JSON.stringify(group))
       var ret = transformPath(copyGroup.triples,copyGroup);
       var bgp = ret[0];
-      var union = null;
+      var union = ret[1];
+      var filter = ret[2]
       while (ret[1] != null) {
         union = ret[1]
         var ret = transformPath(bgp,copyGroup);
         bgp = ret[0]
+        if (ret[2].legnth > 0) {
+          for (var i = 0; i < ret[2].length; i++) {
+            filter.push(ret[2][i]);
+          }
+        }
       }
       if (union != null) {
         var bgp1 = bgp.slice(0,union.index)
         var bgp2 = bgp.slice(union.index)
         var pre = {type : "bgp", triples : bgp1}
         var post = {type : "bgp", triples : bgp2}
-        return new SparqlGroupsIterator(source, [pre,union.union,post], childOptions)
+        var groups = []
+        if (bgp1.length != 0) {
+          groups.push(pre)
+        }
+        groups.push(union.union)
+        if (bgp2.length != 0) {
+          groups.push(post)
+        }
+        return new SparqlGroupsIterator(source, groups, childOptions)
+      }
+      else if (filter.length > 0) {
+        var groups = [{type : "bgp", triples : bgp}];
+        for (var i = 0; i < filter.length; i++) {
+          groups.push(filter[i]);
+        }
+        return new SparqlGroupsIterator(source, groups, childOptions)
       }
       else {
         return new BGPOperator(source, bgp, options);
@@ -336,27 +360,30 @@ AsyncIterator.subclass(SparqlGroupIterator)
 transformPath = function(bgp, group){
   var i = 0;
   var queryChange = false;
-  var ret = [bgp,null];
+  var ret = [bgp,null,[]];
   while (i < bgp.length && !queryChange) {
     var curr = bgp[i];
     if (typeof curr.predicate != "string" && curr.predicate.type == "path") {
       switch (curr.predicate.pathType) {
         case "/":
-          ret = pathSeq(bgp,curr,i,group)
+          ret = pathSeq(bgp,curr,i,group,ret[2])
           if (ret[1] != null) {
             queryChange = true;
           }
           break;
         case "^":
-          ret = pathInv(bgp,curr,i,group)
+          ret = pathInv(bgp,curr,i,group,ret[2])
           if (ret[1] != null) {
             queryChange = true;
           }
           break;
         case "|":
-          ret = pathAlt(bgp,curr,i,group)
+          ret = pathAlt(bgp,curr,i,group,ret[2])
           queryChange = true;
           break;
+        case "!":
+          ret = pathNeg(bgp,curr,i,group,ret[2])
+          queryChange = true;
         default:
           break;
       }
@@ -366,7 +393,7 @@ transformPath = function(bgp, group){
   return ret;
 }
 
-pathSeq = function(bgp,pathTP,ind,group){
+pathSeq = function(bgp,pathTP,ind,group,filter){
   var s = pathTP.subject, p = pathTP.predicate,o = pathTP.object;
   var union = null;
   var newTPs = []
@@ -392,6 +419,11 @@ pathSeq = function(bgp,pathTP,ind,group){
     if (recurs[1] != null) {
       union = recurs[1]
     }
+    if (recurs[2] != null) {
+      for (var i = 0; i < recurs[2].length; i++) {
+        filter.push(recurs[2][i])
+      }
+    }
     var recursedBGP = recurs[0]
     recursedBGP.map(tp => newTPs.push(tp))
   }
@@ -399,16 +431,21 @@ pathSeq = function(bgp,pathTP,ind,group){
   for (var k = 1; k < newTPs.length; k++) {
     bgp.splice(ind + k, 0, newTPs[k]);
   }
-  return [bgp,union];
+  return [bgp,union,filter];
 }
 
-pathInv = function(bgp,pathTP,ind,group){
+pathInv = function(bgp,pathTP,ind,group,filter){
   var union = null;
   var s = pathTP.subject, p = pathTP.predicate.items[0],o = pathTP.object;
   var newTP = {subject : o, predicate : p, object : s};
   var recurs = transformPath([newTP],group)
   if (recurs[1] != null) {
     union = recurs[1]
+  }
+  if (recurs[2] != null) {
+    for (var i = 0; i < recurs[2].length; i++) {
+      filter.push(recurs[2][i])
+    }
   }
   var recursedBGP = recurs[0]
   bgp[ind] = recursedBGP[0]
@@ -417,10 +454,10 @@ pathInv = function(bgp,pathTP,ind,group){
       bgp.push(recursedBGP[i]);
     }
   }
-  return [bgp,union];
+  return [bgp,union,filter];
 }
 
-pathAlt = function(bgp,pathTP,ind,group){
+pathAlt = function(bgp,pathTP,ind,group,filter){
 
   var pathIndex = 0
   for (var i = 0; i < group.triples.length; i++) {
@@ -435,14 +472,32 @@ pathAlt = function(bgp,pathTP,ind,group){
     var newBGP = {type : "bgp"}
     newBGP.triples = []
     var newTP = {subject : s, predicate : p[i], object : o}
-    var recurs = transformPath([newTP],group)[0];
-    for (var j = 0; j < recurs.length; j++) {
-      newBGP.triples.push(recurs[j])
-    }
+    newBGP.triples.push(newTP)
     union.patterns.push(newBGP);
   }
   bgp.splice(ind,1);
-  return [bgp,{union:union,index:pathIndex}];
+  return [bgp,{union:union,index:pathIndex},filter];
+}
+
+pathNeg = function(bgp,pathTP,ind,group,filter){
+  var union = null;
+  var s = pathTP.subject, p = pathTP.predicate.items[0],o = pathTP.object;
+  var blank = "?" + Math.random().toString(36).substring(8);
+  var newTP = {subject : s, predicate : blank, object : o};
+  if (typeof p == "string") {
+    var flt = {type : "filter", expression :{type : "operation", operator : "!=", args : [blank,p]} }
+    filter.push(flt);
+  }
+  else {
+    var preds = p.items;
+    for (var i = 0; i < preds.length; i++) {
+      pred = preds[i]
+      var flt = {type : "filter", expression :{type : "operation", operator : "!=", args : [blank,pred]} }
+      filter.push(flt)
+    }
+  }
+  bgp[ind] = newTP
+  return [bgp,union,filter];
 }
 
 containsPath = function(branch,path){
