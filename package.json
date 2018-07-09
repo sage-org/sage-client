@@ -1,11 +1,12 @@
 {
   "name": "sage-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Javascript client for SaGe interfaces",
   "main": "src/client.js",
   "scripts": {
     "lint": "standard",
     "test": "jest --notify",
+    "postinstall": "npm run browserify",
     "browserify": "browserify sage-client.js -s sage -o sage-client-browser.js"
   },
   "repository": {
