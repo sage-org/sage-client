@@ -6,7 +6,6 @@
   "scripts": {
     "lint": "standard",
     "test": "jest --notify",
-    "postinstall": "npm run browserify",
     "browserify": "browserify sage-client.js -s sage -o sage-client-browser.js"
   },
   "repository": {
