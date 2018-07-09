@@ -42,7 +42,7 @@ Usage: sage-client <server> [options]
 * Basic Graph Patterns
 * Optional
 * SPARQL subqueries
-* [SERVICE queries](https://www.w3.org/TR/2013/REC-sparql11-service-description-20130321/)
+* [SERVICE queries](https://www.w3.org/TR/2013/REC-sparql11-federated-query-20130321/)
 * Union
 * Limit / Offset
 * Group By
