@@ -25,3 +25,9 @@ JS client for the SaGe query engine
   * bound
   * isIRI, isBlank, isLiteral
   * sameterm
+* Values
+* Property Path :
+  * Sequence '/'
+  * Reverse '^'
+  * Alterative '|'
+  * Negated '!'
