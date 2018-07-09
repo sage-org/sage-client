@@ -4,7 +4,7 @@
   "description": "Javascript client for SaGe interfaces",
   "main": "src/client.js",
   "scripts": {
-    "lint": "standard",
+    "lint": "standard --fix",
     "test": "jest --notify",
     "browserify": "browserify sage-client.js -s sage -o sage-client-browser.js"
   },

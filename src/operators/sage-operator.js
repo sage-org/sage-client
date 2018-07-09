@@ -43,7 +43,7 @@ class SageOperator extends BufferedIterator {
    */
   constructor (bgp, sageClient, optionals = [], filters = []) {
     super()
-    bgp = JSON.parse(JSON.stringify(bgp).replace(/\"_:/g,"\"?"));
+    bgp = JSON.parse(JSON.stringify(bgp).replace(/\"_:/g, '"?'))
     this._bgp = bgp
     this._optionals = optionals
     this._filters = filters

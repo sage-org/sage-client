@@ -11,7 +11,7 @@ const UnionOperator = require('./operators/union-operator.js')
 const SortIterator = require('ldf-client/lib/sparql/SortIterator')
 const DistinctIterator = require('ldf-client/lib/sparql/DistinctIterator')
 const SparqlExpressionEvaluator = require('./utils/SparqlExpressionEvaluator.js')
-const SageRequestClient = require('./utils/sage-request-client');
+const SageRequestClient = require('./utils/sage-request-client')
 const _ = require('lodash')
 const rdf = require('ldf-client/lib/util/RdfUtil')
 const createErrorType = require('ldf-client/lib/util/CustomError')
@@ -24,7 +24,7 @@ var queryConstructors = {
 }
 
 // Creates an iterator from a SPARQL query
-function SparqlIterator (source, query, options,url) {
+function SparqlIterator (source, query, options, url) {
   // Set argument defaults
   if (typeof source.read !== 'function') {
     url = options
@@ -37,25 +37,22 @@ function SparqlIterator (source, query, options,url) {
 
   if (options.servers != null) {
     if (options.servers[url] != null) {
-      options.client = options.servers[url];
+      options.client = options.servers[url]
+    } else {
+      options.servers[url] = new SageRequestClient(url, options.spy)
+      options.client = options.servers[url]
     }
-    else {
-      options.servers[url] = new SageRequestClient(url,options.spy);
-      options.client = options.servers[url];
-    }
+  } else {
+    options.servers = {}
+    options.servers[url] = new SageRequestClient(url, options.spy)
+    options.client = options.servers[url]
   }
-  else {
-    options.servers = {};
-    options.servers[url] = new SageRequestClient(url,options.spy);
-    options.client = options.servers[url];
-  }
-
 
   // Transform the query into a cascade of iterators
   try {
     // Parse the query if needed
     if (typeof query === 'string') { query = new SparqlParser(options.prefixes).parse(query) }
-    options.prefixes = query.prefixes;
+    options.prefixes = query.prefixes
     // Create an iterator that projects the bindings according to the query type
     let queryIterator
     let QueryConstructor = queryConstructors[query.queryType]
@@ -82,29 +79,26 @@ function SparqlIterator (source, query, options,url) {
 
     if (query.group) {
       for (var i = 0; i < query.group.length; i++) {
-        var gb = query.group[i];
-        graphIterator = new GroupByOperator(graphIterator,gb ,options);
+        var gb = query.group[i]
+        graphIterator = new GroupByOperator(graphIterator, gb, options)
       }
     }
 
     if (query.variables != null) {
-
       for (var i = 0; i < query.variables.length; i++) {
-        var variable = query.variables[i];
-        if (variable.expression != null && typeof variable.expression != "string") {
+        var variable = query.variables[i]
+        if (variable.expression != null && typeof variable.expression !== 'string') {
           if (query.group) {
-            graphIterator = new AggrOperator(graphIterator,variable);
-          }
-          else {
-            graphIterator = new GroupByOperator(graphIterator,"*" ,options);
-            graphIterator = new AggrOperator(graphIterator,variable);
+            graphIterator = new AggrOperator(graphIterator, variable)
+          } else {
+            graphIterator = new GroupByOperator(graphIterator, '*', options)
+            graphIterator = new AggrOperator(graphIterator, variable)
           }
         }
       }
     }
 
     queryIterator.source = graphIterator
-
 
     // Create iterators for modifiers
     if (query.distinct) { queryIterator = new DistinctIterator(queryIterator, options) }
@@ -135,14 +129,12 @@ SparqlSelectIterator.prototype._transform = function (bindings, done) {
     // Project a simple variable by copying its value
     if (variable !== '*') {
       if (variable.expression != null) {
-        if (typeof variable.expression === "string") {
-          row[variable.variable] = valueOf(variable.expression);
+        if (typeof variable.expression === 'string') {
+          row[variable.variable] = valueOf(variable.expression)
+        } else {
+          row[variable.variable] = valueOf(variable.variable)
         }
-        else {
-          row[variable.variable] = valueOf(variable.variable);
-        }
-      }
-      else {
+      } else {
         row[variable] = valueOf(variable)
       }
     } else {
@@ -239,25 +231,25 @@ function SparqlGroupIterator (source, group, options) {
   switch (group.type) {
     case 'bgp':
       var copyGroup = JSON.parse(JSON.stringify(group))
-      var ret = transformPath(copyGroup.triples,copyGroup);
-      var bgp = ret[0];
-      var union = ret[1];
+      var ret = transformPath(copyGroup.triples, copyGroup)
+      var bgp = ret[0]
+      var union = ret[1]
       var filter = ret[2]
       while (ret[1] != null) {
         union = ret[1]
-        var ret = transformPath(bgp,copyGroup);
+        var ret = transformPath(bgp, copyGroup)
         bgp = ret[0]
         if (ret[2].legnth > 0) {
           for (var i = 0; i < ret[2].length; i++) {
-            filter.push(ret[2][i]);
+            filter.push(ret[2][i])
           }
         }
       }
       if (union != null) {
-        var bgp1 = bgp.slice(0,union.index)
+        var bgp1 = bgp.slice(0, union.index)
         var bgp2 = bgp.slice(union.index)
-        var pre = {type : "bgp", triples : bgp1}
-        var post = {type : "bgp", triples : bgp2}
+        var pre = {type: 'bgp', triples: bgp1}
+        var post = {type: 'bgp', triples: bgp2}
         var groups = []
         if (bgp1.length != 0) {
           groups.push(pre)
@@ -267,30 +259,27 @@ function SparqlGroupIterator (source, group, options) {
           groups.push(post)
         }
         return new SparqlGroupsIterator(source, groups, childOptions)
-      }
-      else if (filter.length > 0) {
-        var groups = [{type : "bgp", triples : bgp}];
+      } else if (filter.length > 0) {
+        var groups = [{type: 'bgp', triples: bgp}]
         for (var i = 0; i < filter.length; i++) {
-          groups.push(filter[i]);
+          groups.push(filter[i])
         }
         return new SparqlGroupsIterator(source, groups, childOptions)
-      }
-      else {
-        return new BGPOperator(source, bgp, options);
+      } else {
+        return new BGPOperator(source, bgp, options)
       }
     case 'query':
-      return new SparqlIterator(source, group, options, options.client._url);
+      return new SparqlIterator(source, group, options, options.client._url)
     case 'service':
-      var subquery = group.patterns[0];
+      var subquery = group.patterns[0]
 
-      if (subquery.type === "bgp") {
-        var tmpQuery = {prefixes : options.prefixes, queryType : "SELECT", variables : ["*"], type: "query", where : [subquery]}
-        var newQuery = tmpQuery;
+      if (subquery.type === 'bgp') {
+        var tmpQuery = {prefixes: options.prefixes, queryType: 'SELECT', variables: ['*'], type: 'query', where: [subquery]}
+        var newQuery = tmpQuery
+      } else {
+        var newQuery = subquery
       }
-      else {
-        var newQuery = subquery;
-      }
-      return new SparqlIterator(source, newQuery,options, group.name)
+      return new SparqlIterator(source, newQuery, options, group.name)
     case 'group':
       return new SparqlGroupsIterator(source, group.patterns, childOptions)
     case 'optional':
@@ -301,23 +290,22 @@ function SparqlGroupIterator (source, group, options) {
         return new SparqlGroupIterator(source.clone(), patternToken, childOptions)
       }))
     case 'values':
-      var vals = group.values;
-      var filter = "SELECT * WHERE { FILTER "
+      var vals = group.values
+      var filter = 'SELECT * WHERE { FILTER '
       for (var i = 0; i < vals.length; i++) {
         var or = vals[i]
         if (i == 0) {
-          filter += " ( ";
+          filter += ' ( '
         }
-        var cpt = 0;
+        var cpt = 0
         for (var and in or) {
           if (cpt == 0) {
-            filter += " ( ";
+            filter += ' ( '
           }
-          filter += and + ' = ' + or[and];
+          filter += and + ' = ' + or[and]
           if (cpt == Object.keys(or).length - 1) {
             filter += ' ) '
-          }
-          else {
+          } else {
             filter += ' && '
           }
           cpt += 1
@@ -325,21 +313,19 @@ function SparqlGroupIterator (source, group, options) {
 
         if (i == vals.length - 1) {
           filter += ' ) '
-        }
-        else {
+        } else {
           filter += ' || '
         }
       }
-      filter += " }"
-      var tmpQuery = new SparqlParser().parse(filter);
+      filter += ' }'
+      var tmpQuery = new SparqlParser().parse(filter)
       var evaluate = new SparqlExpressionEvaluator(tmpQuery.where[0].expression)
       return source.filter(function (bindings) {
         try {
           if (evaluate(bindings) != null) {
             return !/^"false"|^"0"/.test(evaluate(bindings))
-          }
-          else {
-            return false;
+          } else {
+            return false
           }
         } catch (error) { return false }
       })
@@ -356,65 +342,64 @@ function SparqlGroupIterator (source, group, options) {
 }
 AsyncIterator.subclass(SparqlGroupIterator)
 
-transformPath = function(bgp, group){
-  var i = 0;
-  var queryChange = false;
-  var ret = [bgp,null,[]];
+transformPath = function (bgp, group) {
+  var i = 0
+  var queryChange = false
+  var ret = [bgp, null, []]
   while (i < bgp.length && !queryChange) {
-    var curr = bgp[i];
-    if (typeof curr.predicate != "string" && curr.predicate.type == "path") {
+    var curr = bgp[i]
+    if (typeof curr.predicate !== 'string' && curr.predicate.type == 'path') {
       switch (curr.predicate.pathType) {
-        case "/":
-          ret = pathSeq(bgp,curr,i,group,ret[2])
+        case '/':
+          ret = pathSeq(bgp, curr, i, group, ret[2])
           if (ret[1] != null) {
-            queryChange = true;
+            queryChange = true
           }
-          break;
-        case "^":
-          ret = pathInv(bgp,curr,i,group,ret[2])
+          break
+        case '^':
+          ret = pathInv(bgp, curr, i, group, ret[2])
           if (ret[1] != null) {
-            queryChange = true;
+            queryChange = true
           }
-          break;
-        case "|":
-          ret = pathAlt(bgp,curr,i,group,ret[2])
-          queryChange = true;
-          break;
-        case "!":
-          ret = pathNeg(bgp,curr,i,group,ret[2])
-          queryChange = true;
+          break
+        case '|':
+          ret = pathAlt(bgp, curr, i, group, ret[2])
+          queryChange = true
+          break
+        case '!':
+          ret = pathNeg(bgp, curr, i, group, ret[2])
+          queryChange = true
         default:
-          break;
+          break
       }
     }
     i++
   }
-  return ret;
+  return ret
 }
 
-pathSeq = function(bgp,pathTP,ind,group,filter){
-  var s = pathTP.subject, p = pathTP.predicate,o = pathTP.object;
-  var union = null;
+pathSeq = function (bgp, pathTP, ind, group, filter) {
+  var s = pathTP.subject, p = pathTP.predicate, o = pathTP.object
+  var union = null
   var newTPs = []
-  var blank = "?" + Math.random().toString(36).substring(8);
+  var blank = '?' + Math.random().toString(36).substring(8)
   for (var j = 0; j < p.items.length; j++) {
     var newTP = {}
     if (j == 0) {
-      newTP.subject = s;
-      newTP.predicate = p.items[j];
-      newTP.object = blank;
-    }
-    else {
+      newTP.subject = s
+      newTP.predicate = p.items[j]
+      newTP.object = blank
+    } else {
       var prev = blank
-      blank = "?" + Math.random().toString(36).substring(8);
-      newTP.subject = prev;
-      newTP.predicate = p.items[j];
-      newTP.object = blank;
+      blank = '?' + Math.random().toString(36).substring(8)
+      newTP.subject = prev
+      newTP.predicate = p.items[j]
+      newTP.object = blank
       if (j == p.items.length - 1) {
-        newTP.object = o;
+        newTP.object = o
       }
     }
-    var recurs = transformPath([newTP],group)
+    var recurs = transformPath([newTP], group)
     if (recurs[1] != null) {
       union = recurs[1]
     }
@@ -428,16 +413,16 @@ pathSeq = function(bgp,pathTP,ind,group,filter){
   }
   bgp[ind] = newTPs[0]
   for (var k = 1; k < newTPs.length; k++) {
-    bgp.splice(ind + k, 0, newTPs[k]);
+    bgp.splice(ind + k, 0, newTPs[k])
   }
-  return [bgp,union,filter];
+  return [bgp, union, filter]
 }
 
-pathInv = function(bgp,pathTP,ind,group,filter){
-  var union = null;
-  var s = pathTP.subject, p = pathTP.predicate.items[0],o = pathTP.object;
-  var newTP = {subject : o, predicate : p, object : s};
-  var recurs = transformPath([newTP],group)
+pathInv = function (bgp, pathTP, ind, group, filter) {
+  var union = null
+  var s = pathTP.subject, p = pathTP.predicate.items[0], o = pathTP.object
+  var newTP = {subject: o, predicate: p, object: s}
+  var recurs = transformPath([newTP], group)
   if (recurs[1] != null) {
     union = recurs[1]
   }
@@ -450,70 +435,66 @@ pathInv = function(bgp,pathTP,ind,group,filter){
   bgp[ind] = recursedBGP[0]
   if (recursedBGP.length > 1) {
     for (var i = 1; i < recursedBGP.length; i++) {
-      bgp.push(recursedBGP[i]);
+      bgp.push(recursedBGP[i])
     }
   }
-  return [bgp,union,filter];
+  return [bgp, union, filter]
 }
 
-pathAlt = function(bgp,pathTP,ind,group,filter){
-
+pathAlt = function (bgp, pathTP, ind, group, filter) {
   var pathIndex = 0
   for (var i = 0; i < group.triples.length; i++) {
-    if(containsPath(group.triples[i].predicate,pathTP)){
-      pathIndex = i;
+    if (containsPath(group.triples[i].predicate, pathTP)) {
+      pathIndex = i
     }
   }
-  var s = pathTP.subject, p = pathTP.predicate.items, o = pathTP.object;
-  var union = {type:"union"}
-  union.patterns = [];
+  var s = pathTP.subject, p = pathTP.predicate.items, o = pathTP.object
+  var union = {type: 'union'}
+  union.patterns = []
   for (var i = 0; i < p.length; i++) {
-    var newBGP = {type : "bgp"}
+    var newBGP = {type: 'bgp'}
     newBGP.triples = []
-    var newTP = {subject : s, predicate : p[i], object : o}
+    var newTP = {subject: s, predicate: p[i], object: o}
     newBGP.triples.push(newTP)
-    union.patterns.push(newBGP);
+    union.patterns.push(newBGP)
   }
-  bgp.splice(ind,1);
-  return [bgp,{union:union,index:pathIndex},filter];
+  bgp.splice(ind, 1)
+  return [bgp, {union: union, index: pathIndex}, filter]
 }
 
-pathNeg = function(bgp,pathTP,ind,group,filter){
-  var union = null;
-  var s = pathTP.subject, p = pathTP.predicate.items[0],o = pathTP.object;
-  var blank = "?" + Math.random().toString(36).substring(8);
-  var newTP = {subject : s, predicate : blank, object : o};
-  if (typeof p == "string") {
-    var flt = {type : "filter", expression :{type : "operation", operator : "!=", args : [blank,p]} }
-    filter.push(flt);
-  }
-  else {
-    var preds = p.items;
+pathNeg = function (bgp, pathTP, ind, group, filter) {
+  var union = null
+  var s = pathTP.subject, p = pathTP.predicate.items[0], o = pathTP.object
+  var blank = '?' + Math.random().toString(36).substring(8)
+  var newTP = {subject: s, predicate: blank, object: o}
+  if (typeof p === 'string') {
+    var flt = {type: 'filter', expression: {type: 'operation', operator: '!=', args: [blank, p]} }
+    filter.push(flt)
+  } else {
+    var preds = p.items
     for (var i = 0; i < preds.length; i++) {
       pred = preds[i]
-      var flt = {type : "filter", expression :{type : "operation", operator : "!=", args : [blank,pred]} }
+      var flt = {type: 'filter', expression: {type: 'operation', operator: '!=', args: [blank, pred]} }
       filter.push(flt)
     }
   }
   bgp[ind] = newTP
-  return [bgp,union,filter];
+  return [bgp, union, filter]
 }
 
-containsPath = function(branch,path){
-  if (typeof branch == "string") {
-    return false;
-  }
-  else if (branch === path.predicate) {
-    return true;
-  }
-  else {
-    var result = false;
+containsPath = function (branch, path) {
+  if (typeof branch === 'string') {
+    return false
+  } else if (branch === path.predicate) {
+    return true
+  } else {
+    var result = false
     for (var i = 0; i < branch.items.length; i++) {
-      if(containsPath(branch.items[i],path)){
-        result = true;
+      if (containsPath(branch.items[i], path)) {
+        result = true
       }
     }
-    return result;
+    return result
   }
 }
 

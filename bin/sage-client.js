@@ -30,6 +30,7 @@ const program = require('commander')
 // const SageClient = require('../src/client.js')
 const SparqlIterator = require('../src/sparql-iterator.js')
 const SageClient = require('../src/utils/sage-request-client.js')
+const Spy = require('../src/engine/spy.js')
 const JSONFormatter = require('../src/formatters/json-formatter.js')
 const XMLFormatter = require('../src/formatters/xml-formatter.js')
 
@@ -59,7 +60,8 @@ if (program.args.length !== 1) {
 }
 
 const server = program.args[0]
-const client = new SageClient(server)
+const spy = new Spy()
+const client = new SageClient(server, spy)
 
 // fetch SPARQL query to execute
 let query = null
@@ -84,7 +86,7 @@ iterator.on('end', () => {
   const endTime = Date.now()
   // clearTimeout(timeout)
   const time = endTime - startTime
-  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ?? HTTP request(s)\n`)
+  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s)\n`)
 })
 const startTime = Date.now()
 iterator.on('data', data => {

@@ -40,13 +40,12 @@ class GroupByOperator extends BufferedIterator {
    * @memberof Operators
    * @param {AsyncIterator} source - The source operator
    */
-  constructor (source,group) {
+  constructor (source, group) {
     super(source)
-    if (group === "*") {
-      this._groupby = "*";
-    }
-    else {
-      this._groupby = group.expression;
+    if (group === '*') {
+      this._groupby = '*'
+    } else {
+      this._groupby = group.expression
     }
     this._bufferedValues = []
     this._readingFromSource = false
@@ -81,34 +80,31 @@ class GroupByOperator extends BufferedIterator {
     }
   }
 
-
-  _groupBy (values,groupby){
-    if (groupby === "*") {
-      return [{group : values}];
-    }
-    else {
+  _groupBy (values, groupby) {
+    if (groupby === '*') {
+      return [{group: values}]
+    } else {
       var aggregates = []
       var hashAgg = {}
       for (var i = 0; i < values.length; i++) {
-        var binding = values[i];
-        var gbElem = binding[groupby];
-        delete binding[groupby];
-        var rest = binding;
+        var binding = values[i]
+        var gbElem = binding[groupby]
+        delete binding[groupby]
+        var rest = binding
 
         if (hashAgg[gbElem] != null) {
-          hashAgg[gbElem].group.push(rest);
-        }
-        else {
+          hashAgg[gbElem].group.push(rest)
+        } else {
           hashAgg[gbElem] = {}
-          hashAgg[gbElem][groupby] = gbElem;
-          hashAgg[gbElem].group = [];
-          hashAgg[gbElem].group.push(rest);
+          hashAgg[gbElem][groupby] = gbElem
+          hashAgg[gbElem].group = []
+          hashAgg[gbElem].group.push(rest)
         }
       }
       for (var agg in hashAgg) {
-        aggregates.push(hashAgg[agg]);
+        aggregates.push(hashAgg[agg])
       }
-      return aggregates;
+      return aggregates
     }
   }
 }
