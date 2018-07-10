@@ -61,7 +61,6 @@ if (program.args.length !== 1) {
 
 const server = program.args[0]
 const spy = new Spy()
-const client = new SageClient(server, spy)
 
 // fetch SPARQL query to execute
 let query = null
@@ -74,8 +73,7 @@ if (program.query) {
   process.stderr.write('Error: you must specify a SPARQL query to execute.\nSee ./bin/sage-client.js --help for more details.\n')
   process.exit(1)
 }
-
-const iterator = new SparqlIterator(query, { client })
+const iterator = new SparqlIterator(query, {spy: spy},server);
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
