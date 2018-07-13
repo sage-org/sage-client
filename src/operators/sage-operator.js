@@ -70,7 +70,7 @@ class SageOperator extends BufferedIterator {
     if (count <= 0) {
       done()
     } else {
-      this._sageClient.query(this._bgp, this._next)
+      this._sageClient.query("bgp",this._bgp, this._next)
         .then(body => {
           this._bufferedValues = body.bindings.slice(0)
           if (body.next) {

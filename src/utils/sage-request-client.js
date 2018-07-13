@@ -46,14 +46,31 @@ class SageRequestClient {
       })
   }
 
-  query (bgp, next = null) {
-    const queryBody = {
-      query: {
-        type: 'bgp',
-        bgp
-      },
-      next
+  query (type,bgp, next = null) {
+    var queryBody;
+    switch (type) {
+      case "bgp":
+        queryBody = {
+          query: {
+            type: 'bgp',
+            bgp
+          },
+          next
+        }
+        break;
+      case "union":
+        queryBody = {
+          query: {
+            type: 'union',
+            union:bgp
+          },
+          next
+        }
+        break;
+      default:
+      console.error("Unknown sage query type")
     }
+
     return new Promise((resolve, reject) => {
       this._httpClient.post({ body: queryBody }, (err, res, body) => {
         if (err || res.statusCode !== 200) {

@@ -5,6 +5,7 @@ const SparqlParser = require('sparqljs').Parser
 const AsyncIterator = require('asynciterator')
 const TransformIterator = AsyncIterator.TransformIterator
 const BGPOperator = require('./operators/bgp-operator.js')
+const BindJoinOperator = require('./operators/bindjoin-operator.js')
 const GroupByOperator = require('./operators/gb-operator.js')
 const AggrOperator = require('./operators/agg-operator.js')
 const UnionOperator = require('./operators/union-operator.js')
@@ -266,7 +267,12 @@ function SparqlGroupIterator (source, group, options) {
         }
         return new SparqlGroupsIterator(source, groups, childOptions)
       } else {
-        return new BGPOperator(source, bgp, options)
+        if (source.source != null) {
+          return new BindJoinOperator(source, bgp, options)
+        }
+        else {
+          return new BGPOperator(source, bgp, options)
+        }
       }
     case 'query':
       return new SparqlIterator(source, group, options, options.client._url)
