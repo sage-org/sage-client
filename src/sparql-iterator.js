@@ -218,6 +218,17 @@ SparqlAskIterator.prototype._flush = function (done) {
 // Creates an iterator for a list of SPARQL groups
 function SparqlGroupsIterator (source, groups, options) {
   // Chain iterators for each of the graphs in the group
+  var bgps = _.filter(groups,{'type':'bgp'})
+  if (bgps.length > 1) {
+    var allBGPs = {type:'bgp',triples:[]};
+    for (var i = 0; i < bgps.length; i++) {
+      var bgp = bgps[i]
+      allBGPs.triples = _.concat(allBGPs.triples,bgp.triples);
+    }
+    groups = _.filter(groups,function(o){return o.type != 'bgp';})
+    groups.push(allBGPs);
+  }
+  groups = _.sortBy(groups,['type']);
   return groups.reduce(function (source, group) {
     return new SparqlGroupIterator(source, group, options)
   }, source)
