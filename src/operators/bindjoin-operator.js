@@ -44,6 +44,7 @@ class BindJoinOperator extends BufferedIterator {
     super(source)
     this._bucket = []
     this._client = options.client;
+    this._options = options;
     this._bgp = bgp;
     this._sourceEnd = false;
     this._source = source;
@@ -107,6 +108,7 @@ class BindJoinOperator extends BufferedIterator {
       that._client.query("union",that._bucket, that._next)
         .then(body => {
           var bindings = body.bindings.slice(0);
+          var numbers = []
           for (var i = 0; i < bindings.length; i++) {
             var binding = bindings[i];
             var newBinding = {}
@@ -117,7 +119,15 @@ class BindJoinOperator extends BufferedIterator {
               newBinding[split.slice(0,-1).join('_')] = binding[variable];
             }
             newBinding = Object.assign(newBinding,that._map[number])
+            numbers.push(number);
             that._push(newBinding);
+          }
+          if (that._options.optional != null && that._options.optional === true) {
+            for (var i = 0; i < Object.keys(that._map).length; i++) {
+              if (!numbers.includes(i)) {
+                that._push(that._map[i]);
+              }
+            }
           }
           that._running = false;
           if (body.next) {
@@ -150,6 +160,7 @@ class BindJoinOperator extends BufferedIterator {
             that._client.query("union",that._bucket, that._next)
               .then(body => {
                 var bindings = body.bindings.slice(0);
+                var numbers = []
                 for (var i = 0; i < bindings.length; i++) {
                   var binding = bindings[i];
                   var newBinding = {}
@@ -160,8 +171,14 @@ class BindJoinOperator extends BufferedIterator {
                     newBinding[split.slice(0,-1).join('_')] = binding[variable];
                   }
                   newBinding = Object.assign(newBinding,that._map[number])
-                  if (that._map.length > 0) {
-                    that._push(newBinding);
+                  numbers.push(number);
+                  that._push(newBinding);
+                }
+                if (that._options.optional != null && that._options.optional === true) {
+                  for (var i = 0; i < Object.keys(that._map).length; i++) {
+                    if (!numbers.includes(i)) {
+                      that._push(that._map[i]);
+                    }
                   }
                 }
                 that._running = false;
@@ -181,7 +198,6 @@ class BindJoinOperator extends BufferedIterator {
                     return that.close();
                   }
                 }
-
               })
               .catch(err => {
                 that.emit('error', err)
@@ -192,7 +208,7 @@ class BindJoinOperator extends BufferedIterator {
           else if  (that._source._events.readable == null) {
               that._source.on('readable',fillBucket);
           }
-          else if (!that._running) {
+          else if (!that._running && that._source._events.end == null) {
             that._source.on('end',function(){
               that._sourceEnd = true;
               that._read();

@@ -230,10 +230,26 @@ function SparqlGroupsIterator (source, groups, options) {
     groups.splice(firstBGP,0,allBGPs);
   }
   groups.sort(function(a,b){
-    return (a.type === "filter" || a.type === "values") ? -1 : 0
+    if (a.type === b.type) {
+      return 0;
+    }
+    else if (a.type === "filter" || a.type === "values") {
+      return 1;
+    }
+    else if (b.type === "filter" || b.type === "values") {
+      return -1;
+    }
+    else if (a.type === "bgp"){
+      return -1;
+    }
+    else if (b.type === "bgp") {
+      return 1;
+    }
+    else {
+      return 0;
+    }
   })
 
- console.log(groups);
   return groups.reduce(function (source, group) {
     return new SparqlGroupIterator(source, group, options)
   }, source)
@@ -283,7 +299,7 @@ function SparqlGroupIterator (source, group, options) {
         }
         return new SparqlGroupsIterator(source, groups, childOptions)
       } else {
-        if (source.source != null) {
+        if (source.source != null && ! (source.source instanceof AsyncIterator.SingletonIterator)) {
           return new BindJoinOperator(source, bgp, options)
         }
         else {
