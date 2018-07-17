@@ -299,7 +299,7 @@ function SparqlGroupIterator (source, group, options) {
         }
         return new SparqlGroupsIterator(source, groups, childOptions)
       } else {
-        if (source.source != null && ! (source.source instanceof AsyncIterator.SingletonIterator)) {
+        if (!(source instanceof AsyncIterator.SingletonIterator)) {
           return new BindJoinOperator(source, bgp, options)
         }
         else {
