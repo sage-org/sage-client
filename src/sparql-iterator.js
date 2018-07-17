@@ -279,19 +279,7 @@ function SparqlGroupIterator (source, group, options) {
         }
       }
       if (union != null) {
-        var bgp1 = bgp.slice(0, union.index)
-        var bgp2 = bgp.slice(union.index)
-        var pre = {type: 'bgp', triples: bgp1}
-        var post = {type: 'bgp', triples: bgp2}
-        var groups = []
-        if (bgp1.length != 0) {
-          groups.push(pre)
-        }
-        groups.push(union.union)
-        if (bgp2.length != 0) {
-          groups.push(post)
-        }
-        return new SparqlGroupsIterator(source, groups, childOptions)
+        return new SparqlGroupIterator(source, union, childOptions)
       } else if (filter.length > 0) {
         var groups = [{type: 'bgp', triples: bgp}]
         for (var i = 0; i < filter.length; i++) {
@@ -299,7 +287,7 @@ function SparqlGroupIterator (source, group, options) {
         }
         return new SparqlGroupsIterator(source, groups, childOptions)
       } else {
-        if (!(source instanceof AsyncIterator.SingletonIterator)) {
+        if (!(source instanceof AsyncIterator.SingletonIterator) && !(source instanceof AsyncIterator.ClonedIterator && source._source instanceof AsyncIterator.SingletonIterator)) {
           return new BindJoinOperator(source, bgp, options)
         }
         else {
@@ -490,14 +478,12 @@ pathAlt = function (bgp, pathTP, ind, group, filter) {
   var union = {type: 'union'}
   union.patterns = []
   for (var i = 0; i < p.length; i++) {
-    var newBGP = {type: 'bgp'}
-    newBGP.triples = []
-    var newTP = {subject: s, predicate: p[i], object: o}
-    newBGP.triples.push(newTP)
+    var newBGP = _.cloneDeep(group);
+    replPath(newBGP.triples[pathIndex].predicate,pathTP,p[i]);
     union.patterns.push(newBGP)
   }
   bgp.splice(ind, 1)
-  return [bgp, {union: union, index: pathIndex}, filter]
+  return [bgp, union, filter]
 }
 
 pathNeg = function (bgp, pathTP, ind, group, filter) {
@@ -533,6 +519,19 @@ containsPath = function (branch, path) {
       }
     }
     return result
+  }
+}
+
+replPath = function (tp,path,pred) {
+
+  if (_.isEqual(tp,path.predicate)) {
+    return true
+  } else if (typeof tp != "string"){
+    for (var i = 0; i < tp.items.length; i++) {
+      if (replPath(tp.items[i], path,pred)) {
+        tp.items[i] = pred;
+      }
+    }
   }
 }
 
