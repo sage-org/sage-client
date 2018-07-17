@@ -220,15 +220,20 @@ function SparqlGroupsIterator (source, groups, options) {
   // Chain iterators for each of the graphs in the group
   var bgps = _.filter(groups,{'type':'bgp'})
   if (bgps.length > 1) {
+    var firstBGP = _.find(groups,{'type':'bgp'})
     var allBGPs = {type:'bgp',triples:[]};
     for (var i = 0; i < bgps.length; i++) {
       var bgp = bgps[i]
       allBGPs.triples = _.concat(allBGPs.triples,bgp.triples);
     }
     groups = _.filter(groups,function(o){return o.type != 'bgp';})
-    groups.push(allBGPs);
+    groups.splice(firstBGP,0,allBGPs);
   }
-  groups = _.sortBy(groups,['type']);
+  groups.sort(function(a,b){
+    return (a.type === "filter" || a.type === "values") ? -1 : 0
+  })
+
+ console.log(groups);
   return groups.reduce(function (source, group) {
     return new SparqlGroupIterator(source, group, options)
   }, source)
