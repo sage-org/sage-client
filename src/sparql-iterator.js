@@ -239,12 +239,6 @@ function SparqlGroupsIterator (source, groups, options) {
     else if (b.type === "filter" || b.type === "values") {
       return -1;
     }
-    else if (a.type === "bgp"){
-      return -1;
-    }
-    else if (b.type === "bgp") {
-      return 1;
-    }
     else {
       return 0;
     }
