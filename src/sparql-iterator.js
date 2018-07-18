@@ -5,6 +5,7 @@ const SparqlParser = require('sparqljs').Parser
 const AsyncIterator = require('asynciterator')
 const TransformIterator = AsyncIterator.TransformIterator
 const BGPOperator = require('./operators/bgp-operator.js')
+const ValuesOperator = require('./operators/values-operator.js')
 const BindJoinOperator = require('./operators/bindjoin-operator.js')
 const GroupByOperator = require('./operators/gb-operator.js')
 const AggrOperator = require('./operators/agg-operator.js')
@@ -220,7 +221,7 @@ function SparqlGroupsIterator (source, groups, options) {
   // Chain iterators for each of the graphs in the group
   var bgps = _.filter(groups,{'type':'bgp'})
   if (bgps.length > 1) {
-    var firstBGP = _.find(groups,{'type':'bgp'})
+    var firstBGP = _.findIndex(groups,{'type':'bgp'})
     var allBGPs = {type:'bgp',triples:[]};
     for (var i = 0; i < bgps.length; i++) {
       var bgp = bgps[i]
@@ -233,10 +234,10 @@ function SparqlGroupsIterator (source, groups, options) {
     if (a.type === b.type) {
       return 0;
     }
-    else if (a.type === "filter" || a.type === "values") {
+    else if (a.type === "filter" || b.type === "values") {
       return 1;
     }
-    else if (b.type === "filter" || b.type === "values") {
+    else if (b.type === "filter" || a.type === "values") {
       return -1;
     }
     else {
@@ -244,9 +245,26 @@ function SparqlGroupsIterator (source, groups, options) {
     }
   })
 
-  return groups.reduce(function (source, group) {
-    return new SparqlGroupIterator(source, group, options)
-  }, source)
+  if (groups[0].type === 'values') {
+    var vals = groups[0].values;
+    var bgpIndex = _.findIndex(groups,{'type':'bgp'})
+    var union = {type : 'union', patterns : []}
+    for (var i = 0; i < vals.length; i++) {
+      var newBGP = replaceValues(groups[bgpIndex],vals[i]);
+      var unit = _.cloneDeep(groups.slice(1,-1));
+      unit[bgpIndex-1] = newBGP;
+      union.patterns.push({type: 'group',patterns : unit, value : vals[i]});
+    }
+    return new UnionOperator(...union.patterns.map(function (patternToken) {
+      var unionIter = new SparqlGroupIterator(source.clone(), patternToken, options)
+      return new ValuesOperator(unionIter,patternToken.value,options);
+    }))
+  }
+  else {
+    return groups.reduce(function (source, group) {
+      return new SparqlGroupIterator(source, group, options)
+    }, source)
+  }
 }
 AsyncIterator.subclass(SparqlGroupsIterator)
 
@@ -281,7 +299,28 @@ function SparqlGroupIterator (source, group, options) {
         }
         return new SparqlGroupsIterator(source, groups, childOptions)
       } else {
-        if (!(source instanceof AsyncIterator.SingletonIterator) && !(source instanceof AsyncIterator.ClonedIterator && source._source instanceof AsyncIterator.SingletonIterator)) {
+        var isSingleton = false;
+        var typeFound = false;
+        var tested = source;
+        while (!typeFound) {
+          if (tested instanceof AsyncIterator.ClonedIterator) {
+            if (tested._source != null) {
+              tested = tested._source;
+            }
+            else {
+              isSingleton = true;
+              typeFound = true;
+            }
+          }
+          else if (tested instanceof AsyncIterator.SingletonIterator) {
+            isSingleton = true;
+            typeFound = true;
+          }
+          else {
+            typeFound = true;
+          }
+        }
+        if (!isSingleton) {
           return new BindJoinOperator(source, bgp, options)
         }
         else {
@@ -310,45 +349,6 @@ function SparqlGroupIterator (source, group, options) {
         return new SparqlGroupIterator(source.clone(), patternToken, childOptions)
       }))
     case 'values':
-      var vals = group.values
-      var filter = 'SELECT * WHERE { FILTER '
-      for (var i = 0; i < vals.length; i++) {
-        var or = vals[i]
-        if (i == 0) {
-          filter += ' ( '
-        }
-        var cpt = 0
-        for (var and in or) {
-          if (cpt == 0) {
-            filter += ' ( '
-          }
-          filter += and + ' = ' + or[and]
-          if (cpt == Object.keys(or).length - 1) {
-            filter += ' ) '
-          } else {
-            filter += ' && '
-          }
-          cpt += 1
-        }
-
-        if (i == vals.length - 1) {
-          filter += ' ) '
-        } else {
-          filter += ' || '
-        }
-      }
-      filter += ' }'
-      var tmpQuery = new SparqlParser().parse(filter)
-      var evaluate = new SparqlExpressionEvaluator(tmpQuery.where[0].expression)
-      return source.filter(function (bindings) {
-        try {
-          if (evaluate(bindings) != null) {
-            return !/^"false"|^"0"/.test(evaluate(bindings))
-          } else {
-            return false
-          }
-        } catch (error) { return false }
-      })
     case 'filter':
     // A set of bindings does not match the filter
     // if it evaluates to 0/false, or errors
@@ -527,6 +527,25 @@ replPath = function (tp,path,pred) {
       }
     }
   }
+}
+
+replaceValues = function(bgp,val){
+  var bgpCopy = _.cloneDeep(bgp);
+  for (var i = 0; i < bgpCopy.triples.length; i++) {
+    var tp = bgpCopy.triples[i]
+    for (var variable in val) {
+      if (tp.subject === variable) {
+        tp.subject = val[variable];
+      }
+      if (tp.predicate === variable) {
+        tp.predicate = val[variable];
+      }
+      if (tp.object === variable) {
+        tp.object = val[variable];
+      }
+    }
+  }
+  return bgpCopy;
 }
 
 // Error thrown when the query has a syntax error
