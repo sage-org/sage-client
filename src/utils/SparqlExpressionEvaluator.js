@@ -26,6 +26,7 @@ function SparqlExpressionEvaluator (expression) {
   if (!expression) return noop
   var expressionType = expression && expression.type || typeof expression,
     evaluator = evaluators[expressionType]
+
   if (!evaluator) throw new UnsupportedExpressionError(expressionType)
   return evaluator(expression)
 }
@@ -42,6 +43,8 @@ function noop () { }
 evaluators = {
   // Does nothing
   null: function () { return noop },
+
+  object: function(expr) { return function () { return expr }  },
 
   // Evaluates an IRI, literal, or variable
   string: function (expression) {
@@ -177,6 +180,14 @@ operators = {
 
   'sameterm': function (a, b) {
     return a === b
+  },
+
+  'in': function (a, b) {
+    return b.includes(a);
+  },
+
+  'notin': function (a, b) {
+    return !b.includes(a);
   }
 };
 
@@ -206,7 +217,7 @@ operators = {
 // Tag all operators that have boolean results
 [
   '!', '&&', '||', '=', '!=', '<', '<=', '>', '>=',
-  'langmatches', 'contains', 'regex', 'isiri', 'isblank', 'isliteral', 'sameterm'
+  'langmatches', 'contains', 'regex', 'isiri', 'isblank', 'isliteral', 'sameterm','in','notin'
 ].forEach(function (operatorName) {
   operators[operatorName].resultType = 'boolean'
 })
