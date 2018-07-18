@@ -108,6 +108,7 @@ class BindJoinOperator extends BufferedIterator {
       that._client.query("union",that._bucket, that._next)
         .then(body => {
           var bindings = body.bindings.slice(0);
+          var numbers = []
           if (bindings.length > 0 && _.isEmpty(bindings[0]) && that._options.optional != true) {
             for (var i = 0; i < body.stats.cardinalities.length; i++) {
               var card = body.stats.cardinalities[i]
@@ -117,7 +118,6 @@ class BindJoinOperator extends BufferedIterator {
             }
           }
           else if (bindings.length > 0 && !_.isEmpty(bindings[0])){
-            var numbers = []
             for (var i = 0; i < bindings.length; i++) {
               var binding = bindings[i];
               var newBinding = {}
@@ -165,6 +165,7 @@ class BindJoinOperator extends BufferedIterator {
             that._client.query("union",that._bucket, that._next)
               .then(body => {
                 var bindings = body.bindings.slice(0);
+                var numbers = []
                 if (bindings.length > 0 && _.isEmpty(bindings[0]) && that._options.optional != true) {
                   for (var i = 0; i < body.stats.cardinalities.length; i++) {
                     var card = body.stats.cardinalities[i]
