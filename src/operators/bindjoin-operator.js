@@ -27,7 +27,7 @@ SOFTWARE.
 const { BufferedIterator } = require('asynciterator')
 const rdf = require('ldf-client/lib/util/RdfUtil')
 const map = require('lodash/map')
-
+const _ = require('lodash')
 /**
  * BindJoinOperator applies a BindJoin algorithm on the output of another operator.
  * @extends BufferedIterator
@@ -108,19 +108,29 @@ class BindJoinOperator extends BufferedIterator {
       that._client.query("union",that._bucket, that._next)
         .then(body => {
           var bindings = body.bindings.slice(0);
-          var numbers = []
-          for (var i = 0; i < bindings.length; i++) {
-            var binding = bindings[i];
-            var newBinding = {}
-            var number = -1;
-            for (var variable in binding) {
-              var split = variable.split('_')
-              number = parseInt(split[split.length-1]);
-              newBinding[split.slice(0,-1).join('_')] = binding[variable];
+          if (bindings.length > 0 && _.isEmpty(bindings[0]) && that._options.optional != true) {
+            for (var i = 0; i < body.stats.cardinalities.length; i++) {
+              var card = body.stats.cardinalities[i]
+              if (card.cardinality > 0) {
+                that._push(that._map[i]);
+              }
             }
-            newBinding = Object.assign(newBinding,that._map[number])
-            numbers.push(number);
-            that._push(newBinding);
+          }
+          else if (bindings.length > 0 && !_.isEmpty(bindings[0])){
+            var numbers = []
+            for (var i = 0; i < bindings.length; i++) {
+              var binding = bindings[i];
+              var newBinding = {}
+              var number = -1;
+              for (var variable in binding) {
+                var split = variable.split('_')
+                number = parseInt(split[split.length-1]);
+                newBinding[split.slice(0,-1).join('_')] = binding[variable];
+              }
+              newBinding = Object.assign(newBinding,that._map[number])
+              numbers.push(number);
+              that._push(newBinding);
+            }
           }
           if (that._options.optional != null && that._options.optional === true) {
             for (var i = 0; i < Object.keys(that._map).length; i++) {
@@ -147,11 +157,6 @@ class BindJoinOperator extends BufferedIterator {
             }
           }
         })
-        .catch(err => {
-          that.emit('error', err)
-          that.close()
-          done()
-        })
     }
     else {
 
@@ -160,19 +165,29 @@ class BindJoinOperator extends BufferedIterator {
             that._client.query("union",that._bucket, that._next)
               .then(body => {
                 var bindings = body.bindings.slice(0);
-                var numbers = []
-                for (var i = 0; i < bindings.length; i++) {
-                  var binding = bindings[i];
-                  var newBinding = {}
-                  var number = -1;
-                  for (var variable in binding) {
-                    var split = variable.split('_')
-                    number = parseInt(split[split.length-1]);
-                    newBinding[split.slice(0,-1).join('_')] = binding[variable];
+                if (bindings.length > 0 && _.isEmpty(bindings[0]) && that._options.optional != true) {
+                  for (var i = 0; i < body.stats.cardinalities.length; i++) {
+                    var card = body.stats.cardinalities[i]
+                    if (card.cardinality > 0) {
+                      that._push(that._map[i]);
+                    }
                   }
-                  newBinding = Object.assign(newBinding,that._map[number])
-                  numbers.push(number);
-                  that._push(newBinding);
+                }
+                else if (bindings.length > 0 && !_.isEmpty(bindings[0])){
+                  var numbers = []
+                  for (var i = 0; i < bindings.length; i++) {
+                    var binding = bindings[i];
+                    var newBinding = {}
+                    var number = -1;
+                    for (var variable in binding) {
+                      var split = variable.split('_')
+                      number = parseInt(split[split.length-1]);
+                      newBinding[split.slice(0,-1).join('_')] = binding[variable];
+                    }
+                    newBinding = Object.assign(newBinding,that._map[number])
+                    numbers.push(number);
+                    that._push(newBinding);
+                  }
                 }
                 if (that._options.optional != null && that._options.optional === true) {
                   for (var i = 0; i < Object.keys(that._map).length; i++) {
