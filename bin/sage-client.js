@@ -31,16 +31,18 @@ const program = require('commander')
 const SparqlIterator = require('../src/sparql-iterator.js')
 const SageClient = require('../src/utils/sage-request-client.js')
 const Spy = require('../src/engine/spy.js')
+const JSONFormatter = require('../src/formatters/json-formatter.js')
+const XMLFormatter = require('../src/formatters/xml-formatter.js')
 const SparqlXMLResultWriter = require('ldf-client/lib/writers/SparqlXMLResultWriter')
 const SparqlJSONResultWriter = require('ldf-client/lib/writers/SparqlJSONResultWriter')
 
 const mimetypes = {
-  'application/json': SparqlJSONResultWriter,
-  'application/sparql-results+json': SparqlJSONResultWriter,
-  'json': SparqlJSONResultWriter,
-  'application/xml': SparqlXMLResultWriter,
-  'application/sparql-results+xml': SparqlXMLResultWriter,
-  'xml': SparqlXMLResultWriter
+  'application/json': JSONFormatter,
+  'application/sparql-results+json': JSONFormatter,
+  'json': JSONFormatter,
+  'application/xml': XMLFormatter,
+  'application/sparql-results+xml': XMLFormatter,
+  'xml': XMLFormatter
 }
 
 // Command line interface to execute queries

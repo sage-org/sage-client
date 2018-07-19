@@ -1,112 +1,76 @@
-/* file : xml-formatter.js
-MIT License
+/*! @license MIT ©2014-2016 Miel Vander Sande, Ghent University - imec */
+/* Writer that serializes a SPARQL query result application/sparql+xml */
 
-Copyright (c) 2018 Thomas Minier
+var SparqlResultWriter = require('./SparqlResultWriter'),
+    _ = require('lodash'),
+    util = require('ldf-client/lib/util/RdfUtil'),
+    xml = require('xml');
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-'use strict'
-
-const Formatter = require('./formatter.js')
-const { parseBinding } = require('./utils.js')
-const { compact, map } = require('lodash')
-
-/**
- * A Formatter that format solution bindings into SPARQL Query Results XML Format
- * @see https://www.w3.org/TR/rdf-sparql-XMLres/
- * @extends Formatter
- * @memberof Formatters
- * @author Thomas Minier
- */
-class XMLFormatter extends Formatter {
-  /**
-   * Constructor
-   * @memberof Formatters
-   * @param {AsyncIterator} source - Source iterator
-   * @param {string[]} variables - Projection variables of the SPARQL query
-   */
-  constructor (source, variables) {
-    super(source)
-    this._variables = variables
-  }
-  /**
-   * Implements this function to prepend data to the formatter before the first
-   * set of solution bindings is processed.
-   * @abstract
-   * @return {*} Data to prepend
-   */
-  _prepend () {
-    let header = '<?xml version="1.0"?>\n<sparql xmlns="http://www.w3.org/2005/sparql-results#">\n\t<head>\n'
-    header += this._variables.map(v => `\t\t<variable name="${v.substr(1)}"/>`).join('\n')
-    header += '\n\t</head>\n\t'
-    if (this._variables.length != 0) {
-      header += '<results>\n'
-    }
-    else {
-      header += '<boolean>\n'
-    }
-    return header
-  }
-
-  /**
-   * Format bindings
-   * @abstract
-   * @param  {Object} bindings - Bag of solution bindings to format
-   * @return {void}
-   */
-  _format (bindings) {
-    if (typeof bindings === "boolean") {
-      return '\t\t' + bindings + '\n';
-    }
-    else {
-      let result = '\t\t<result>\n'
-      result += compact(map(bindings, (b, v) => {
-        const binding = parseBinding(v, b)
-        switch (binding.type) {
-          case 'iri':
-          return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<uri>${binding.value}</uri>\n\t\t\t</binding>\n`
-          case 'literal':
-          return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<literal>${binding.value}</literal>\n\t\t\t</binding>\n`
-          case 'literal+type':
-          return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<literal datatype="${binding.datatype}">${binding.value}</literal>\n\t\t\t</binding>\n`
-          case 'literal+lang':
-          return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<literal xml:lang="${binding.lang}">${binding.value}</literal>\n\t\t\t</binding>\n`
-          default:
-          return null
-        }
-      })).join('')
-      result += '\t\t</result>\n'
-      return result
-    }
-  }
-
-  _append () {
-    let header = "";
-    if (this._variables.length != 0) {
-      header = '\t</results>\n'
-    }
-    else {
-      header = '\t</boolean>\n'
-    }
-    return header + '</sparql>\n'
-  }
+function SparqlXMLResultWriter(sparqlIterator) {
+  SparqlResultWriter.call(this, sparqlIterator);
 }
+SparqlResultWriter.subclass(SparqlXMLResultWriter);
 
-module.exports = XMLFormatter
+SparqlXMLResultWriter.prototype._writeHead = function (variableNames) {
+  // Write root element
+  var self = this,
+      root = this._root = xml.element({
+        _attr: { xlmns: 'http://www.w3.org/2005/sparql-results#' },
+      });
+  xml({ sparql: root }, { stream: true, indent: '  ', declaration: true })
+     .on('data', function (chunk) { self._push(chunk + '\n'); });
+
+  // Write head element
+  if (variableNames.length) {
+    root.push({
+      head: variableNames.map(function (v) {
+        return { variable: { _attr: { name: v } } };
+      }),
+    });
+  }
+};
+
+SparqlXMLResultWriter.prototype._writeBindings = function (result) {
+  // With the first result, write the results element
+  if (!this._results)
+    this._root.push({ results: this._results = xml.element({}) });
+
+  // Unbound variables cannot be part of XML
+  result = _.omit(result, function (value) {
+    return value === undefined || value === null;
+  });
+
+  // Write the result element
+  this._results.push({
+    result: _.map(result, function (value, variable) {
+      var xmlValue, lang, type;
+      if (!util.isLiteral(value))
+        xmlValue = util.isBlank(value) ? { bnode: value } : { uri: value };
+      else {
+        xmlValue = { literal: util.getLiteralValue(value) };
+        if (lang = util.getLiteralLanguage(value))
+          xmlValue.literal = [{ _attr: { 'xml:lang': lang } }, xmlValue.literal];
+        else if (type = util.getLiteralType(value))
+          xmlValue.literal = [{ _attr: {   datatype: type } }, xmlValue.literal];
+      }
+      return { binding: [{ _attr: { name: variable.substring(1) } }, xmlValue] };
+    }),
+  });
+};
+
+SparqlXMLResultWriter.prototype._writeBoolean = function (result) {
+  this._root.push({ boolean: result });
+};
+
+SparqlXMLResultWriter.prototype._flush = function (done) {
+  // If there were no matches, the results element hasn't been created yet
+  if (this._empty)
+    this._root.push({ results: this._results = xml.element({}) });
+  // There's no results element for ASK queries
+  if (this._results)
+    this._results.close();
+  this._root.close();
+  done();
+};
+
+module.exports = SparqlXMLResultWriter;
