@@ -100,7 +100,7 @@ class XMLFormatter extends Formatter {
   _append () {
     let header = "";
     if (this._variables.length != 0) {
-      header = '\t<results>\n'
+      header = '\t</results>\n'
     }
     else {
       header = '\t</boolean>\n'
