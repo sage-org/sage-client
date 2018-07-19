@@ -49,14 +49,14 @@ class JSONFormatter extends Formatter {
   }
 
   _prepend () {
-    let header = '{\n\t"head": {\n\t\t"vars": [ '
+    let header = '{\n "head": {\n  "vars": [ '
     header += this._variables.map(v => `"${v.substr(1)}"`).join(', ')
-    header += ' ]\n\t},\n\t"results": {\n\t\t"bindings": [\n'
+    header += ' ]\n },\n "results": {\n  "bindings": [\n'
     return header
   }
 
   _append () {
-    return '\n\t\t]\n\t}\n}\n'
+    return '\n  ]\n }\n}\n'
   }
 
   /**
@@ -66,27 +66,27 @@ class JSONFormatter extends Formatter {
    * @return {void}
    */
   _format (bindings) {
-    let result = ',\n\t\t\t{\n'
+    let result = ',\n   {\n'
     if (this._firstValue) {
-      result = '\t\t\t{\n'
+      result = '   {\n'
       this._firstValue = false
     }
     result += compact(map(bindings, (b, v) => {
       const binding = parseBinding(v, b)
       switch (binding.type) {
         case 'iri':
-          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "uri" , "value": "${binding.value}"\n\t\t\t\t}`
+          return `    "${binding.variable.substr(1)}": {\n     "type": "uri" , "value": "${binding.value}"\n    }`
         case 'literal':
-          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}"\n\t\t\t\t}`
+          return `    "${binding.variable.substr(1)}": {\n     "type": "literal" , "value": "${binding.value}"\n    }`
         case 'literal+type':
-          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "datatype": "${binding.datatype}"\n\t\t\t\t}`
+          return `    "${binding.variable.substr(1)}": {\n     "type": "literal" , "value": "${binding.value}", "datatype": "${binding.datatype}"\n    }`
         case 'literal+lang':
-          return `\t\t\t\t"${binding.variable.substr(1)}": {\n\t\t\t\t\t"type": "literal" , "value": "${binding.value}", "xml:lang": "${binding.lang}"\n\t\t\t\t}`
+          return `    "${binding.variable.substr(1)}": {\n     "type": "literal" , "value": "${binding.value}", "xml:lang": "${binding.lang}"\n    }`
         default:
           return null
       }
     })).join(',\n')
-    result += '\n\t\t\t}'
+    result += '\n   }'
     return result
   }
 }

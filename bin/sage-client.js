@@ -75,9 +75,7 @@ if (program.query) {
 }
 var iterator = new SparqlIterator(query, {spy: spy},server);
 var variables = iterator._properties.variables;
-if (mimetypes[program.type] === XMLFormatter) {
-  iterator = new XMLFormatter(iterator,variables);
-}
+iterator = new mimetypes[program.type](iterator,variables);
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
@@ -92,12 +90,7 @@ iterator.on('end', () => {
 })
 const startTime = Date.now()
 iterator.on('data', data => {
-  if (mimetypes[program.type] === XMLFormatter) {
-    process.stdout.write(data);
-  }
-  else {
-    process.stdout.write(JSON.stringify(data) + '\n')
-  }
+  process.stdout.write(data);
 })
 
 // set query timeout
