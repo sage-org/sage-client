@@ -103,7 +103,7 @@ class XMLFormatter extends Formatter {
       header = '\t<results>\n'
     }
     else {
-      header = '\t<boolean>\n'
+      header = '\t</boolean>\n'
     }
     return header + '</sparql>\n'
   }
