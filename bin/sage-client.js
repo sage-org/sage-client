@@ -73,7 +73,11 @@ if (program.query) {
   process.stderr.write('Error: you must specify a SPARQL query to execute.\nSee ./bin/sage-client.js --help for more details.\n')
   process.exit(1)
 }
-const iterator = new SparqlIterator(query, {spy: spy},server);
+var iterator = new SparqlIterator(query, {spy: spy},server);
+var variables = iterator._properties.variables;
+if (mimetypes[program.type] === XMLFormatter) {
+  iterator = new XMLFormatter(iterator,variables);
+}
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
@@ -88,7 +92,12 @@ iterator.on('end', () => {
 })
 const startTime = Date.now()
 iterator.on('data', data => {
-  process.stdout.write(JSON.stringify(data) + '\n')
+  if (mimetypes[program.type] === XMLFormatter) {
+    process.stdout.write(data);
+  }
+  else {
+    process.stdout.write(JSON.stringify(data) + '\n')
+  }
 })
 
 // set query timeout
