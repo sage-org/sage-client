@@ -31,16 +31,16 @@ const program = require('commander')
 const SparqlIterator = require('../src/sparql-iterator.js')
 const SageClient = require('../src/utils/sage-request-client.js')
 const Spy = require('../src/engine/spy.js')
-const JSONFormatter = require('../src/formatters/json-formatter.js')
-const XMLFormatter = require('../src/formatters/xml-formatter.js')
+const SparqlXMLResultWriter = require('ldf-client/lib/writers/SparqlXMLResultWriter')
+const SparqlJSONResultWriter = require('ldf-client/lib/writers/SparqlJSONResultWriter')
 
 const mimetypes = {
-  'application/json': JSONFormatter,
-  'application/sparql-results+json': JSONFormatter,
-  'json': JSONFormatter,
-  'application/xml': XMLFormatter,
-  'application/sparql-results+xml': XMLFormatter,
-  'xml': XMLFormatter
+  'application/json': SparqlJSONResultWriter,
+  'application/sparql-results+json': SparqlJSONResultWriter,
+  'json': SparqlJSONResultWriter,
+  'application/xml': SparqlXMLResultWriter,
+  'application/sparql-results+xml': SparqlXMLResultWriter,
+  'xml': SparqlXMLResultWriter
 }
 
 // Command line interface to execute queries
@@ -73,24 +73,7 @@ if (program.query) {
   process.stderr.write('Error: you must specify a SPARQL query to execute.\nSee ./bin/sage-client.js --help for more details.\n')
   process.exit(1)
 }
-var iterator = new SparqlIterator(query, {spy: spy},server);
-if (iterator.queryType === "ASK") {
-  var variables = []
-}
-else {
-  var variables = iterator._properties.variables;
-}
-variables = variables.map(function(v){if (typeof v === "object") {
-    while (v.variable === null) {
-      v = v.expression
-    }
-    return v.variable;
-  }
-  else {
-    return v;
-  }
-});
-iterator = new mimetypes[program.type](iterator,variables);
+var iterator = new mimetypes[program.type](new SparqlIterator(query, {spy: spy},server));
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
