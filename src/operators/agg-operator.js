@@ -351,11 +351,10 @@ class AggrOperator extends TransformIterator {
       var valueSet = []
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        valueSet.push(bindings[aggVar])
+        valueSet.push(JSON.parse(bindings[aggVar]))
       }
-      item[alias] = valueSet.join(sep)
+      item[alias] = '"' + valueSet.join(sep) + '"'
     }
-
     return item
   }
 }
