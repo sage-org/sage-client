@@ -26,6 +26,7 @@ SOFTWARE.
 
 const { TransformIterator } = require('asynciterator')
 const map = require('lodash/map')
+const utils = require('../formatters/utils')
 
 /**
  * GroupByOperator applies a DISTINCT modifier on the output of another operator.
@@ -140,23 +141,25 @@ class AggrOperator extends TransformIterator {
       var hash = {}
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
-          if (isNaN(bindings[aggVar])) {
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null && hash[val] == null) {
+          if (isNaN(val)) {
             notNumbers = true
           } else {
-            hash[bindings[aggVar]] = true
-            sum += Number(bindings[aggVar])
+            hash[val] = true
+            sum += Number(val)
           }
         }
       }
     } else {
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null) {
-          if (isNaN(bindings[aggVar])) {
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null) {
+          if (isNaN(val)) {
             notNumbers = true
           } else {
-            sum += Number(bindings[aggVar])
+            sum += Number(val)
           }
         }
       }
@@ -179,23 +182,25 @@ class AggrOperator extends TransformIterator {
       var hash = {}
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
-          if (isNaN(bindings[aggVar])) {
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null && hash[val] == null) {
+          if (isNaN(val)) {
             notNumbers = true
           } else {
-            hash[bindings[aggVar]] = true
-            vals.push(Number(bindings[aggVar]))
+            hash[val] = true
+            vals.push(Number(val))
           }
         }
       }
     } else {
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null) {
-          if (isNaN(bindings[aggVar])) {
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null) {
+          if (isNaN(val)) {
             notNumbers = true
           } else {
-            vals.push(Number(bindings[aggVar]))
+            vals.push(Number(val))
           }
         }
       }
@@ -218,23 +223,25 @@ class AggrOperator extends TransformIterator {
       var hash = {}
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
-          if (isNaN(bindings[aggVar])) {
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null && hash[val] == null) {
+          if (isNaN(val)) {
             notNumbers = true
           } else {
-            hash[bindings[aggVar]] = true
-            vals.push(Number(bindings[aggVar]))
+            hash[val] = true
+            vals.push(Number(val))
           }
         }
       }
     } else {
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null) {
-          if (isNaN(bindings[aggVar])) {
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null) {
+          if (isNaN(val)) {
             notNumbers = true
           } else {
-            vals.push(Number(bindings[aggVar]))
+            vals.push(Number(val))
           }
         }
       }
@@ -257,8 +264,8 @@ class AggrOperator extends TransformIterator {
       var hash = {}
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
-          var val = bindings[aggVar]
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null && hash[val] == null) {
           if (val.startsWith('"') || val.startsWith("'")) {
             val = val.slice(1, -1)
           }
@@ -273,8 +280,8 @@ class AggrOperator extends TransformIterator {
     } else {
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        if (bindings[aggVar] != null) {
-          var val = bindings[aggVar]
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null) {
           if (val.startsWith('"') || val.startsWith("'")) {
             val = val.slice(1, -1)
           }
