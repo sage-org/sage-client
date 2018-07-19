@@ -74,7 +74,12 @@ if (program.query) {
   process.exit(1)
 }
 var iterator = new SparqlIterator(query, {spy: spy},server);
-var variables = iterator._properties.variables;
+if (iterator.queryType === "ASK") {
+  var variables = []
+}
+else {
+  var variables = iterator._properties.variables;
+}
 variables = variables.map(function(v){if (typeof v === "object") {
     while (v.variable === null) {
       v = v.expression

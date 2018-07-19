@@ -55,7 +55,13 @@ class XMLFormatter extends Formatter {
   _prepend () {
     let header = '<?xml version="1.0"?>\n<sparql xmlns="http://www.w3.org/2005/sparql-results#">\n\t<head>\n'
     header += this._variables.map(v => `\t\t<variable name="${v.substr(1)}"/>`).join('\n')
-    header += '\n\t</head>\n\t<results>\n'
+    header += '\n\t</head>\n\t'
+    if (this._variables.length != 0) {
+      header += '<results>\n'
+    }
+    else {
+      header += '<boolean>\n'
+    }
     return header
   }
 
@@ -66,28 +72,40 @@ class XMLFormatter extends Formatter {
    * @return {void}
    */
   _format (bindings) {
-    let result = '\t\t<result>\n'
-    result += compact(map(bindings, (b, v) => {
-      const binding = parseBinding(v, b)
-      switch (binding.type) {
-        case 'iri':
+    if (typeof bindings === "boolean") {
+      return '\t\t' + bindings + '\n';
+    }
+    else {
+      let result = '\t\t<result>\n'
+      result += compact(map(bindings, (b, v) => {
+        const binding = parseBinding(v, b)
+        switch (binding.type) {
+          case 'iri':
           return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<uri>${binding.value}</uri>\n\t\t\t</binding>\n`
-        case 'literal':
+          case 'literal':
           return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<literal>${binding.value}</literal>\n\t\t\t</binding>\n`
-        case 'literal+type':
+          case 'literal+type':
           return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<literal datatype="${binding.datatype}">${binding.value}</literal>\n\t\t\t</binding>\n`
-        case 'literal+lang':
+          case 'literal+lang':
           return `\t\t\t<binding name="${binding.variable.substr(1)}">\n\t\t\t\t<literal xml:lang="${binding.lang}">${binding.value}</literal>\n\t\t\t</binding>\n`
-        default:
+          default:
           return null
-      }
-    })).join('')
-    result += '\t\t</result>\n'
-    return result
+        }
+      })).join('')
+      result += '\t\t</result>\n'
+      return result
+    }
   }
 
   _append () {
-    return '\t</results>\n</sparql>\n'
+    let header = "";
+    if (this._variables.length != 0) {
+      header = '\t<results>\n'
+    }
+    else {
+      header = '\t<boolean>\n'
+    }
+    return header + '</sparql>\n'
   }
 }
 
