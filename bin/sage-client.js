@@ -75,6 +75,16 @@ if (program.query) {
 }
 var iterator = new SparqlIterator(query, {spy: spy},server);
 var variables = iterator._properties.variables;
+variables = variables.map(function(v){if (typeof v === "object") {
+    while (v.variable === null) {
+      v = v.expression
+    }
+    return v.variable;
+  }
+  else {
+    return v;
+  }
+});
 iterator = new mimetypes[program.type](iterator,variables);
 
 iterator.on('error', error => {
