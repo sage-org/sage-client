@@ -253,6 +253,11 @@ function SparqlGroupsIterator (source, groups, options) {
     var bgpIndex = _.findIndex(groups,{'type':'bgp'})
     var union = {type : 'union', patterns : []}
     for (var i = 0; i < vals.length; i++) {
+      for (var val in vals[i]) {
+        if (vals[i][val] == null){
+          delete vals[i][val]
+        }
+      }
       var newBGP = replaceValues(groups[bgpIndex],vals[i]);
       var unit = _.cloneDeep(groups.slice(1,-1));
       unit[bgpIndex-1] = newBGP;
@@ -536,13 +541,13 @@ replaceValues = function(bgp,val){
   for (var i = 0; i < bgpCopy.triples.length; i++) {
     var tp = bgpCopy.triples[i]
     for (var variable in val) {
-      if (tp.subject === variable && val[variable] != null) {
+      if (tp.subject === variable) {
         tp.subject = val[variable];
       }
-      if (tp.predicate === variable && val[variable] != null) {
+      if (tp.predicate === variable) {
         tp.predicate = val[variable];
       }
-      if (tp.object === variable && val[variable] != null) {
+      if (tp.object === variable) {
         tp.object = val[variable];
       }
     }
