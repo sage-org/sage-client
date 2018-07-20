@@ -46,7 +46,7 @@ evaluators = {
   // Does nothing
   null: function () { return noop },
 
-  object: function(expr) { return function () { return expr }  },
+  object: function(expr) { return function () { return expr.map(function(elem){return utils.parseBinding("null",elem).value}) }  },
 
   // Evaluates an IRI, literal, or variable
   string: function (expression) {
