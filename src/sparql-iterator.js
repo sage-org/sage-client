@@ -60,6 +60,9 @@ function SparqlIterator (source, query, options, url) {
     let QueryConstructor = queryConstructors[query.queryType]
     if (!QueryConstructor) { throw new Error('No iterator available for query type: ' + query.queryType) }
     queryIterator = new QueryConstructor(null, query, options)
+    if (query.values != null) {
+      query.where.push({type: 'values',values:query.values})
+    }
     // Create an iterator for bindings of the query's graph pattern
     var graphIterator = new SparqlGroupsIterator(source,
       queryIterator.patterns || query.where, options)
