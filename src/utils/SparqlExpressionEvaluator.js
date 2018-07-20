@@ -90,11 +90,11 @@ evaluators = {
           // Convert the arguments if necessary
           switch (operator.type) {
             case 'numeric':
-              args[i] = parseFloat(literalValue(arg))
+              args[i] = parseFloat(arg)
               break
             case 'boolean':
               args[i] = arg !== XSD_FALSE &&
-                     (!isLiteral(arg) || literalValue(arg) !== '0')
+                     (!isLiteral(arg) || arg !== '0')
               break
           }
         }

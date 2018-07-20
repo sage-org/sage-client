@@ -89,6 +89,22 @@ function SparqlIterator (source, query, options, url) {
       }
     }
 
+    if (query.having != null) {
+      for (var i = 0; i < query.having.length; i++) {
+        var hav = query.having[i]
+        for (var j = 0; j < hav.args.length; j++) {
+          if (typeof hav.args[j] != "string"){
+            var newVar = '?tmp_' + Math.random().toString(36).substring(8)
+            var aggrVar = {variable: newVar, expression: hav.args[j]}
+            graphIterator = new AggrOperator(graphIterator, aggrVar);
+            hav.args[j] = newVar
+          }
+        }
+        var filter = {type:'filter', expression: hav}
+        graphIterator = new SparqlGroupIterator(graphIterator,filter,options)
+      }
+    }
+
     if (query.variables != null) {
       for (var i = 0; i < query.variables.length; i++) {
         var variable = query.variables[i]
@@ -359,6 +375,7 @@ function SparqlGroupIterator (source, group, options) {
     case 'filter':
     // A set of bindings does not match the filter
     // if it evaluates to 0/false, or errors
+
       var evaluate = new SparqlExpressionEvaluator(group.expression)
       return source.filter(function (bindings) {
         try { return !/^"false"|^"0"/.test(evaluate(bindings)) } catch (error) { return false }
