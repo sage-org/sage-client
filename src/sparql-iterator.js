@@ -96,7 +96,12 @@ function SparqlIterator (source, query, options, url) {
           if (typeof hav.args[j] != "string"){
             var newVar = '?tmp_' + Math.random().toString(36).substring(8)
             var aggrVar = {variable: newVar, expression: hav.args[j]}
-            graphIterator = new AggrOperator(graphIterator, aggrVar);
+            if (query.group) {
+              graphIterator = new AggrOperator(graphIterator, aggrVar);
+            } else {
+              graphIterator = new GroupByOperator(graphIterator, '*', options)
+              graphIterator = new AggrOperator(graphIterator, aggrVar);
+            }
             hav.args[j] = newVar
           }
         }
