@@ -351,7 +351,6 @@ function SparqlGroupIterator (source, group, options) {
       return new UnionOperator(...group.patterns.map(function (patternToken) {
         return new SparqlGroupIterator(source.clone(), patternToken, childOptions)
       }))
-    case 'values':
     case 'filter':
     // A set of bindings does not match the filter
     // if it evaluates to 0/false, or errors
@@ -537,13 +536,13 @@ replaceValues = function(bgp,val){
   for (var i = 0; i < bgpCopy.triples.length; i++) {
     var tp = bgpCopy.triples[i]
     for (var variable in val) {
-      if (tp.subject === variable) {
+      if (tp.subject === variable && val[variable] != null) {
         tp.subject = val[variable];
       }
-      if (tp.predicate === variable) {
+      if (tp.predicate === variable && val[variable] != null) {
         tp.predicate = val[variable];
       }
-      if (tp.object === variable) {
+      if (tp.object === variable && val[variable] != null) {
         tp.object = val[variable];
       }
     }
