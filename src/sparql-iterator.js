@@ -99,6 +99,7 @@ function SparqlIterator (source, query, options, url) {
             if (query.group) {
               graphIterator = new AggrOperator(graphIterator, aggrVar);
             } else {
+              query.group = "placeholder"
               graphIterator = new GroupByOperator(graphIterator, '*', options)
               graphIterator = new AggrOperator(graphIterator, aggrVar);
             }
