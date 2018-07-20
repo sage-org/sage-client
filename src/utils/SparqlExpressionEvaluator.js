@@ -140,17 +140,14 @@ operators = {
     langTag = langTag.toLowerCase()
     langRange = langRange.toLowerCase()
     return langTag === langRange ||
-           (langRange = literalValue(langRange)) === '*' ||
+           langRange === '*' ||
            langTag.substr(1, langRange.length + 1) === langRange + '-'
   },
   'contains': function (string, substring) {
-    substring = literalValue(substring)
-    string = literalValue(string)
     return string.indexOf(substring) >= 0
   },
   'regex': function (subject, pattern) {
-    if (isLiteral(subject)) { subject = literalValue(subject) }
-    return new RegExp(literalValue(pattern)).test(subject)
+    return new RegExp(pattern).test(subject)
   },
   'str': function (a) {
     return isLiteral(a) ? a : '"' + a + '"'
