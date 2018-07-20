@@ -3,6 +3,8 @@
 var N3Util = require('n3').Util,
   createErrorType = require('ldf-client/lib/util/CustomError')
 
+const utils = require('../formatters/utils')
+
 var XSD = 'http://www.w3.org/2001/XMLSchema#',
   XSD_INTEGER = XSD + 'integer',
   XSD_DOUBLE = XSD + 'double',
@@ -49,9 +51,9 @@ evaluators = {
   // Evaluates an IRI, literal, or variable
   string: function (expression) {
     // Evaluate a IRIs or literal to its own value
-    if (expression[0] !== '?') { return function () { return expression } }
+    if (expression[0] !== '?') { return function () { return utils.parseBinding("null",expression).value; } }
     // Evaluate a variable to its value
-    else { return function (bindings) { return bindings && bindings[expression] } }
+    else { return function (bindings) { return bindings && utils.parseBinding(expression,bindings[expression]).value;  } }
   },
 
   // Evaluates an operation
