@@ -95,6 +95,10 @@ function SparqlIterator (source, query, options, url) {
         for (var j = 0; j < hav.args.length; j++) {
           if (typeof hav.args[j] != "string"){
             var newVar = '?tmp_' + Math.random().toString(36).substring(8)
+            if (options.artificials == null) {
+              options.artificials = []
+            }
+            options.artificials.push(blank);
             var aggrVar = {variable: newVar, expression: hav.args[j]}
             if (query.group) {
               graphIterator = new AggrOperator(graphIterator, aggrVar);
@@ -147,11 +151,13 @@ TransformIterator.subclass(SparqlIterator)
 function SparqlSelectIterator (source, query, options) {
   TransformIterator.call(this, source, options)
   this.setProperty('variables', query.variables)
+  this._options = options;
 }
 SparqlIterator.subclass(SparqlSelectIterator)
 
 // Executes the SELECT projection
 SparqlSelectIterator.prototype._transform = function (bindings, done) {
+  var that = this;
   this._push(this.getProperty('variables').reduce(function (row, variable) {
     // Project a simple variable by copying its value
     if (variable !== '*') {
@@ -167,7 +173,7 @@ SparqlSelectIterator.prototype._transform = function (bindings, done) {
     } else {
       // Project a star selector by copying all variable bindings
       for (variable in bindings) {
-        if (rdf.isVariable(variable)) { row[variable] = valueOf(variable) }
+        if (rdf.isVariable(variable) && !that._options.artificials.includes(variable)) { row[variable] = valueOf(variable) }
       }
     }
     return row
@@ -306,13 +312,13 @@ function SparqlGroupIterator (source, group, options) {
   switch (group.type) {
     case 'bgp':
       var copyGroup = JSON.parse(JSON.stringify(group))
-      var ret = transformPath(copyGroup.triples, copyGroup)
+      var ret = transformPath(copyGroup.triples, copyGroup,options)
       var bgp = ret[0]
       var union = ret[1]
       var filter = ret[2]
       while (ret[1] != null) {
         union = ret[1]
-        var ret = transformPath(bgp, copyGroup)
+        var ret = transformPath(bgp, copyGroup,options)
         bgp = ret[0]
         if (ret[2].legnth > 0) {
           for (var i = 0; i < ret[2].length; i++) {
@@ -392,7 +398,7 @@ function SparqlGroupIterator (source, group, options) {
 }
 AsyncIterator.subclass(SparqlGroupIterator)
 
-transformPath = function (bgp, group) {
+transformPath = function (bgp, group,options) {
   var i = 0
   var queryChange = false
   var ret = [bgp, null, []]
@@ -401,23 +407,23 @@ transformPath = function (bgp, group) {
     if (typeof curr.predicate !== 'string' && curr.predicate.type == 'path') {
       switch (curr.predicate.pathType) {
         case '/':
-          ret = pathSeq(bgp, curr, i, group, ret[2])
+          ret = pathSeq(bgp, curr, i, group, ret[2],options)
           if (ret[1] != null) {
             queryChange = true
           }
           break
         case '^':
-          ret = pathInv(bgp, curr, i, group, ret[2])
+          ret = pathInv(bgp, curr, i, group, ret[2],options)
           if (ret[1] != null) {
             queryChange = true
           }
           break
         case '|':
-          ret = pathAlt(bgp, curr, i, group, ret[2])
+          ret = pathAlt(bgp, curr, i, group, ret[2],options)
           queryChange = true
           break
         case '!':
-          ret = pathNeg(bgp, curr, i, group, ret[2])
+          ret = pathNeg(bgp, curr, i, group, ret[2],options)
           queryChange = true
         default:
           break
@@ -428,11 +434,15 @@ transformPath = function (bgp, group) {
   return ret
 }
 
-pathSeq = function (bgp, pathTP, ind, group, filter) {
+pathSeq = function (bgp, pathTP, ind, group, filter,options) {
   var s = pathTP.subject, p = pathTP.predicate, o = pathTP.object
   var union = null
   var newTPs = []
-  var blank = '?' + Math.random().toString(36).substring(8)
+  var blank = '?tmp_' + Math.random().toString(36).substring(8)
+  if (options.artificials == null) {
+    options.artificials = []
+  }
+  options.artificials.push(blank);
   for (var j = 0; j < p.items.length; j++) {
     var newTP = {}
     if (j == 0) {
@@ -441,7 +451,11 @@ pathSeq = function (bgp, pathTP, ind, group, filter) {
       newTP.object = blank
     } else {
       var prev = blank
-      blank = '?' + Math.random().toString(36).substring(8)
+      blank = '?tmp_' + Math.random().toString(36).substring(8)
+      if (options.artificials == null) {
+        options.artificials = []
+      }
+      options.artificials.push(blank);
       newTP.subject = prev
       newTP.predicate = p.items[j]
       newTP.object = blank
@@ -449,7 +463,7 @@ pathSeq = function (bgp, pathTP, ind, group, filter) {
         newTP.object = o
       }
     }
-    var recurs = transformPath([newTP], group)
+    var recurs = transformPath([newTP], group,options)
     if (recurs[1] != null) {
       union = recurs[1]
     }
@@ -468,11 +482,11 @@ pathSeq = function (bgp, pathTP, ind, group, filter) {
   return [bgp, union, filter]
 }
 
-pathInv = function (bgp, pathTP, ind, group, filter) {
+pathInv = function (bgp, pathTP, ind, group, filter,options) {
   var union = null
   var s = pathTP.subject, p = pathTP.predicate.items[0], o = pathTP.object
   var newTP = {subject: o, predicate: p, object: s}
-  var recurs = transformPath([newTP], group)
+  var recurs = transformPath([newTP], group,options)
   if (recurs[1] != null) {
     union = recurs[1]
   }
@@ -491,7 +505,7 @@ pathInv = function (bgp, pathTP, ind, group, filter) {
   return [bgp, union, filter]
 }
 
-pathAlt = function (bgp, pathTP, ind, group, filter) {
+pathAlt = function (bgp, pathTP, ind, group, filter,options) {
   var pathIndex = 0
   for (var i = 0; i < group.triples.length; i++) {
     if (containsPath(group.triples[i].predicate, pathTP)) {
@@ -510,10 +524,14 @@ pathAlt = function (bgp, pathTP, ind, group, filter) {
   return [bgp, union, filter]
 }
 
-pathNeg = function (bgp, pathTP, ind, group, filter) {
+pathNeg = function (bgp, pathTP, ind, group, filter,options) {
   var union = null
   var s = pathTP.subject, p = pathTP.predicate.items[0], o = pathTP.object
-  var blank = '?' + Math.random().toString(36).substring(8)
+  var blank = '?tmp_' + Math.random().toString(36).substring(8)
+  if (options.artificials == null) {
+    options.artificials = []
+  }
+  options.artificials.push(blank);
   var newTP = {subject: s, predicate: blank, object: o}
   if (typeof p === 'string') {
     var flt = {type: 'filter', expression: {type: 'operation', operator: '!=', args: [blank, p]} }

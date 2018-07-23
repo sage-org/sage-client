@@ -28,7 +28,6 @@ function SparqlExpressionEvaluator (expression) {
   if (!expression) return noop
   var expressionType = expression && expression.type || typeof expression,
     evaluator = evaluators[expressionType]
-
   if (!evaluator) throw new UnsupportedExpressionError(expressionType)
   return evaluator(expression)
 }
@@ -53,7 +52,15 @@ evaluators = {
     // Evaluate a IRIs or literal to its own value
     if (expression[0] !== '?') { return function () { return utils.parseBinding("null",expression).value; } }
     // Evaluate a variable to its value
-    else { return function (bindings) { return bindings && utils.parseBinding(expression,bindings[expression]).value;  } }
+    else { return function (bindings) {
+      if (utils.parseBinding(expression,bindings[expression]).type === "literal+lang") {
+        return bindings && bindings[expression];
+      }
+      else {
+        return bindings && utils.parseBinding(expression,bindings[expression]).value;
+      }
+    }
+  }
   },
 
   // Evaluates an operation
@@ -137,10 +144,10 @@ operators = {
   },
   'langmatches': function (langTag, langRange) {
     // Implements https://tools.ietf.org/html/rfc4647#section-3.3.1
-    langTag = langTag.toLowerCase()
-    langRange = langRange.toLowerCase()
+    langTag = langTag.toLowerCase().replace(/^"(.*)"$/, '$1');
+    langRange = langRange.toLowerCase().replace(/^"(.*)"$/, '$1');
     return langTag === langRange ||
-           langRange === '*' ||
+           (langRange = literalValue(langRange)) === '*' ||
            langTag.substr(1, langRange.length + 1) === langRange + '-'
   },
   'contains': function (string, substring) {
