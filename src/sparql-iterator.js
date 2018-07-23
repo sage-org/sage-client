@@ -173,7 +173,13 @@ SparqlSelectIterator.prototype._transform = function (bindings, done) {
     } else {
       // Project a star selector by copying all variable bindings
       for (variable in bindings) {
-        if (rdf.isVariable(variable) && !that._options.artificials.includes(variable)) { row[variable] = valueOf(variable) }
+        if (that._options.artificials != null) {
+          if (rdf.isVariable(variable) && !that._options.artificials.includes(variable)) { row[variable] = valueOf(variable) }
+        }
+        else {
+          if (rdf.isVariable(variable)) { row[variable] = valueOf(variable) }
+        }
+
       }
     }
     return row
