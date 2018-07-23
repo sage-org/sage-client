@@ -322,16 +322,6 @@ function SparqlGroupIterator (source, group, options) {
       var bgp = ret[0]
       var union = ret[1]
       var filter = ret[2]
-      while (ret[1] != null) {
-        union = ret[1]
-        var ret = transformPath(bgp, copyGroup,options)
-        bgp = ret[0]
-        if (ret[2].legnth > 0) {
-          for (var i = 0; i < ret[2].length; i++) {
-            filter.push(ret[2][i])
-          }
-        }
-      }
       if (union != null) {
         return new SparqlGroupIterator(source, union, childOptions)
       } else if (filter.length > 0) {
@@ -472,6 +462,7 @@ pathSeq = function (bgp, pathTP, ind, group, filter,options) {
     var recurs = transformPath([newTP], group,options)
     if (recurs[1] != null) {
       union = recurs[1]
+      return [bgp, union, filter]
     }
     if (recurs[2] != null) {
       for (var i = 0; i < recurs[2].length; i++) {
