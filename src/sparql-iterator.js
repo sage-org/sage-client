@@ -98,7 +98,7 @@ function SparqlIterator (source, query, options, url) {
             if (options.artificials == null) {
               options.artificials = []
             }
-            options.artificials.push(blank);
+            options.artificials.push(newVar);
             var aggrVar = {variable: newVar, expression: hav.args[j]}
             if (query.group) {
               graphIterator = new AggrOperator(graphIterator, aggrVar);
