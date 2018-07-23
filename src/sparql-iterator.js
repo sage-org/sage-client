@@ -486,6 +486,7 @@ pathInv = function (bgp, pathTP, ind, group, filter,options) {
   var recurs = transformPath([newTP], group,options)
   if (recurs[1] != null) {
     union = recurs[1]
+    return [bgp, union, filter]
   }
   if (recurs[2] != null) {
     for (var i = 0; i < recurs[2].length; i++) {
@@ -514,7 +515,12 @@ pathAlt = function (bgp, pathTP, ind, group, filter,options) {
   union.patterns = []
   for (var i = 0; i < p.length; i++) {
     var newBGP = _.cloneDeep(group);
-    replPath(newBGP.triples[pathIndex].predicate,pathTP,p[i]);
+    if (_.isEqual(newBGP.triples[pathIndex].predicate,pathTP.predicate)) {
+      newBGP.triples[pathIndex].predicate = p[i];
+    }
+    else {
+      replPath(newBGP.triples[pathIndex].predicate,pathTP,p[i]);
+    }
     union.patterns.push(newBGP)
   }
   bgp.splice(ind, 1)
