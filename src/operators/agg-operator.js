@@ -167,7 +167,8 @@ class AggrOperator extends TransformIterator {
     if (notNumbers) {
       item[alias] = 'null'
     } else {
-      item[alias] = vals.reduce(function(a, b) { return a + b; }).toFixed(1).toString();
+      var sum = vals.reduce(function(a, b) { return a + b; })
+      item[alias] = (Math.round(sum * 100) / 100).toString();
     }
     return item
   }
@@ -303,7 +304,7 @@ class AggrOperator extends TransformIterator {
       item[alias] = 'null'
     } else {
       var average = vals.reduce((a, b) => a + b) / vals.length
-      item[alias] = average.toFixed(1).toString()
+      item[alias] = (Math.round(average * 100) / 100).toString();
     }
     return item
   }
