@@ -47,7 +47,7 @@ class SageOperator extends BufferedIterator {
     for (var i = 0; i < bgp.length; i++) {
       var tp = bgp[i]
       for (var variable in tp) {
-        if (tp[variable].startsWith('_:b')) {
+        if (tp[variable].startsWith('_:')) {
           var newVar = '?' + tp[variable].slice(2);
           tp[variable] = newVar;
           if (this._options.artificials != null) {
