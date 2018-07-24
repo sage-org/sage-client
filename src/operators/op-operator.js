@@ -28,6 +28,9 @@ const { TransformIterator } = require('asynciterator')
 const _ = require('lodash')
 const map = require('lodash/map')
 const utils = require('../formatters/utils')
+var N3Util = require('n3').Util
+var isLiteral = N3Util.isLiteral,
+  literalValue = N3Util.getLiteralValue
 
 /**
  * @extends TransformIterator
@@ -59,7 +62,12 @@ class OperationOperator extends TransformIterator {
       '!': function (a) { return !a },
       '&&': function (a, b) { return a && b },
       '||': function (a, b) { return a || b },
-      'strlen': function(a) { return a.length}
+      'str': function (a) { return isLiteral(a) ? a : '"' + a + '"'},
+      'strlen': function(a) { return a.length},
+      'strlang': function(a,b) {
+        var parsed = utils.parseBinding("null",a);
+        return (parsed.type == "literal") ? '"' + parsed.value + '"' + "@" + b : null
+      }
     };
   }
 
@@ -71,7 +79,10 @@ class OperationOperator extends TransformIterator {
    * @return {void}
    */
   _transform (item, done) {
-    item[this._variable] = this.applyOperator(item,this._expression).toString()
+    var value = this.applyOperator(item,this._expression);
+    if (value != null) {
+      item[this._variable] = this.applyOperator(item,this._expression).toString()
+    }
     this._push(item);
     done()
   }
@@ -83,35 +94,23 @@ class OperationOperator extends TransformIterator {
       args[0] = this.applyOperator(item,args[0])
     }
     else if (typeof args[0] === "string" && args[0].startsWith('?')){
-      args[0] = utils.parseBinding(args[0],item[args[0]]).value;
-      if (!isNaN(args[0])) {
-        args[0] = Number(args[0]);
-      }
-    }
-    else {
-      args[0] = utils.parseBinding("null",args[0]).value;
-      if (!isNaN(args[0])) {
-        args[0] = Number(args[0]);
-      }
+      args[0] = item[args[0]]
     }
     if (args[1] != null) {
       if (typeof args[1] === "object") {
         args[1] = this.applyOperator(item,args[1])
       }
       else if (typeof args[1] === "string" && args[1].startsWith('?')){
-        args[1] = utils.parseBinding(args[1],item[args[1]]).value;
-        if (!isNaN(args[1])) {
-          args[1] = Number(args[1]);
-        }
-      }
-      else {
-        args[1] = utils.parseBinding("null",args[1]).value;
-        if (!isNaN(args[1])) {
-          args[1] = Number(args[1]);
-        }
+        args[1] = item[args[1]]
       }
     }
-    return this._operators[expr.operator](args[0],args[1]);
+    var func = this._operators[expr.operator];
+    if (func != null) {
+      return this._operators[expr.operator](args[0],args[1]);
+    }
+    else {
+      throw new Error("Operation not implemented : " + expr.operator)
+    }
   }
 
 
