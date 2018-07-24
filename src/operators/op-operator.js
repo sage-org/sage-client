@@ -62,11 +62,14 @@ class OperationOperator extends TransformIterator {
       '!': function (a) { return !a },
       '&&': function (a, b) { return a && b },
       '||': function (a, b) { return a || b },
-      'str': function (a) { return isLiteral(a) ? a : '"' + a + '"'},
+      'str': function (a) {
+        var parsed = utils.parseBinding("null",a);
+        return '"' + parsed.value + '"';
+      },
       'strlen': function(a) { return a.length},
       'strlang': function(a,b) {
         var parsed = utils.parseBinding("null",a);
-        return (parsed.type == "literal") ? '"' + parsed.value + '"' + "@" + b : null
+        return (parsed.type == "literal") ? '"' + parsed.value + '"' + "@" + JSON.parse(b) : null
       }
     };
   }
