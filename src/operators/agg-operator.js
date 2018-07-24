@@ -25,6 +25,7 @@ SOFTWARE.
 'use strict'
 
 const { TransformIterator } = require('asynciterator')
+const _ = require('lodash')
 const map = require('lodash/map')
 const utils = require('../formatters/utils')
 
@@ -167,7 +168,7 @@ class AggrOperator extends TransformIterator {
     if (notNumbers) {
       item[alias] = 'null'
     } else {
-      var sum = vals.reduce(function(a, b) { return a + b; })
+      var sum = _.sum(vals)
       item[alias] = (Math.round(sum * 100) / 100).toString();
     }
     return item
@@ -303,7 +304,7 @@ class AggrOperator extends TransformIterator {
     if (notNumbers) {
       item[alias] = 'null'
     } else {
-      var average = vals.reduce((a, b) => a + b) / vals.length
+      var average = _.mean(vals);
       item[alias] = (Math.round(average * 100) / 100).toString();
     }
     return item
