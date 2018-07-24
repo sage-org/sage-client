@@ -135,47 +135,6 @@ class AggrOperator extends TransformIterator {
     var aggVar = this._variable.expression.expression
     var alias = this._variable.variable
     var dist = this._variable.expression.distinct
-    var sum = 0
-    var notNumbers = false
-    if (dist) {
-      var hash = {}
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
-        if (val != null && hash[val] == null) {
-          if (isNaN(val)) {
-            notNumbers = true
-          } else {
-            hash[val] = true
-            sum += Number(val)
-          }
-        }
-      }
-    } else {
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
-        if (val != null) {
-          if (isNaN(val)) {
-            notNumbers = true
-          } else {
-            sum += Number(val)
-          }
-        }
-      }
-    }
-    if (notNumbers) {
-      item[alias] = 'null'
-    } else {
-      item[alias] = sum.toString()
-    }
-    return item
-  }
-
-  _doMin (item) {
-    var aggVar = this._variable.expression.expression
-    var alias = this._variable.variable
-    var dist = this._variable.expression.distinct
     var vals = []
     var notNumbers = false
     if (dist) {
@@ -200,6 +159,50 @@ class AggrOperator extends TransformIterator {
           if (isNaN(val)) {
             notNumbers = true
           } else {
+            vals.push(Number(val))
+          }
+        }
+      }
+    }
+    if (notNumbers) {
+      item[alias] = 'null'
+    } else {
+      item[alias] = vals.reduce(function(a, b) { return a + b; }).toFixed(1).toString();
+    }
+    return item
+  }
+
+  _doMin (item) {
+    var aggVar = this._variable.expression.expression
+    var alias = this._variable.variable
+    var dist = this._variable.expression.distinct
+    var vals = []
+    var valMap = {}
+    var notNumbers = false
+    if (dist) {
+      var hash = {}
+      for (var i = 0; i < item.group.length; i++) {
+        var bindings = item.group[i]
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null && hash[val] == null) {
+          if (isNaN(val)) {
+            notNumbers = true
+          } else {
+            hash[val] = true
+            valMap[Number(val)] = val;
+            vals.push(Number(val))
+          }
+        }
+      }
+    } else {
+      for (var i = 0; i < item.group.length; i++) {
+        var bindings = item.group[i]
+        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        if (val != null) {
+          if (isNaN(val)) {
+            notNumbers = true
+          } else {
+            valMap[Number(val)] = val;
             vals.push(Number(val))
           }
         }
@@ -218,6 +221,7 @@ class AggrOperator extends TransformIterator {
     var alias = this._variable.variable
     var dist = this._variable.expression.distinct
     var vals = []
+    var valMap = {}
     var notNumbers = false
     if (dist) {
       var hash = {}
@@ -229,6 +233,7 @@ class AggrOperator extends TransformIterator {
             notNumbers = true
           } else {
             hash[val] = true
+            valMap[Number(val)] = val;
             vals.push(Number(val))
           }
         }
@@ -241,6 +246,7 @@ class AggrOperator extends TransformIterator {
           if (isNaN(val)) {
             notNumbers = true
           } else {
+            valMap[Number(val)] = val;
             vals.push(Number(val))
           }
         }
@@ -249,7 +255,7 @@ class AggrOperator extends TransformIterator {
     if (notNumbers) {
       item[alias] = 'null'
     } else {
-      item[alias] = (Math.max(...vals)).toString()
+      item[alias] = valMap[(Math.max(...vals))]
     }
     return item
   }
@@ -273,7 +279,7 @@ class AggrOperator extends TransformIterator {
             notNumbers = true
           } else {
             hash[val] = true
-            vals.push(val)
+            vals.push(Number(val))
           }
         }
       }
@@ -297,7 +303,7 @@ class AggrOperator extends TransformIterator {
       item[alias] = 'null'
     } else {
       var average = vals.reduce((a, b) => a + b) / vals.length
-      item[alias] = average.toString()
+      item[alias] = average.toFixed(1).toString()
     }
     return item
   }
