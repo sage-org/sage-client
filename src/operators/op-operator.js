@@ -49,24 +49,78 @@ class OperationOperator extends TransformIterator {
     this._expression = variable.expression
     source.on('error', err => console.error())
     this._operators = {
-      '+': function (a, b) { return a + b },
-      '-': function (a, b) { return a - b },
-      '*': function (a, b) { return a * b },
-      '/': function (a, b) { return a / b },
-      '=': function (a, b) { return a == b },
-      '!=': function (a, b) { return a !== b },
-      '<': function (a, b) { return a < b },
-      '<=': function (a, b) { return a <= b },
-      '>': function (a, b) { return a > b },
-      '>=': function (a, b) { return a >= b },
-      '!': function (a) { return !a },
-      '&&': function (a, b) { return a && b },
-      '||': function (a, b) { return a || b },
+      '+': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return Number(parsedA) + Number(parsedB);
+      },
+      '-': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return Number(parsedA) - Number(parsedB);
+      },
+      '*': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return Number(parsedA) * Number(parsedB);
+       },
+      '/': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return Number(parsedA) / Number(parsedB);
+       },
+      '=': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA == parsedB;
+      },
+      '!=': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA != parsedB;
+       },
+      '<': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA < parsedB;
+       },
+      '<=': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA <= parsedB;
+       },
+      '>': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA > parsedB;
+       },
+      '>=': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA >= parsedB;
+       },
+      '!': function (a) {
+        var parsedA = utils.parseBinding("null",a).value;
+        return !parsedA;
+      },
+      '&&': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA && parsedB;
+      },
+      '||': function (a, b) {
+        var parsedA = utils.parseBinding("null",a).value;
+        var parsedB = utils.parseBinding("null",b).value;
+        return parsedA || parsedB;
+      },
       'str': function (a) {
         var parsed = utils.parseBinding("null",a);
         return '"' + parsed.value + '"';
       },
-      'strlen': function(a) { return a.length},
+      'strlen': function(a) {
+        var parsedA = utils.parseBinding("null",a).value;
+        return parsedA.length; 
+      },
       'strlang': function(a,b) {
         var parsed = utils.parseBinding("null",a);
         return (parsed.type == "literal") ? '"' + parsed.value + '"' + "@" + JSON.parse(b) : null
@@ -97,14 +151,24 @@ class OperationOperator extends TransformIterator {
       args[0] = this.applyOperator(item,args[0])
     }
     else if (typeof args[0] === "string" && args[0].startsWith('?')){
-      args[0] = item[args[0]]
+      if (Array.isArray(item.group) && item[args[0]] == null) {
+        args[0] = item.group[0][args[0]]
+      }
+      else {
+        args[0] = item[args[0]]
+      }
     }
     if (args[1] != null) {
       if (typeof args[1] === "object") {
         args[1] = this.applyOperator(item,args[1])
       }
       else if (typeof args[1] === "string" && args[1].startsWith('?')){
-        args[1] = item[args[1]]
+        if (Array.isArray(item.group) && item[args[1]] == null) {
+          args[1] = item.group[0][args[1]]
+        }
+        else {
+          args[1] = item[args[1]]
+        }
       }
     }
     var func = this._operators[expr.operator];
