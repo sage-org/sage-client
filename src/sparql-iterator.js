@@ -8,6 +8,7 @@ const BGPOperator = require('./operators/bgp-operator.js')
 const ValuesOperator = require('./operators/values-operator.js')
 const BindJoinOperator = require('./operators/bindjoin-operator.js')
 const GroupByOperator = require('./operators/gb-operator.js')
+const OperationOperator = require('./operators/op-operator.js')
 const AggrOperator = require('./operators/agg-operator.js')
 const UnionOperator = require('./operators/union-operator.js')
 const SortIterator = require('ldf-client/lib/sparql/SortIterator')
@@ -104,11 +105,19 @@ function SparqlIterator (source, query, options, url) {
       for (var i = 0; i < query.variables.length; i++) {
         var variable = query.variables[i]
         if (variable.expression != null && typeof variable.expression !== 'string') {
-          if (query.group) {
-            graphIterator = new AggrOperator(graphIterator, variable)
-          } else {
-            graphIterator = new GroupByOperator(graphIterator, '*', options)
-            graphIterator = new AggrOperator(graphIterator, variable)
+          if (variable.expression.type === "operation") {
+            graphIterator = new OperationOperator(graphIterator, variable)
+          }
+          else if (variable.expression.type === "aggregate") {
+            if (query.group) {
+              graphIterator = new AggrOperator(graphIterator, variable)
+            } else {
+              graphIterator = new GroupByOperator(graphIterator, '*', options)
+              graphIterator = new AggrOperator(graphIterator, variable)
+            }
+          }
+          else {
+            throw new Error("Unknown variable type : " + variable.expression.type)
           }
         }
       }
