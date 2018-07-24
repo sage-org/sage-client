@@ -73,8 +73,12 @@ function SparqlIterator (source, query, options, url) {
         var gb = query.group[i]
         if (gb.expression != null  && typeof gb.expression !== 'string' && gb.expression.type === "operation") {
           graphIterator = new OperationOperator(graphIterator, gb)
+          var tmpGB = {expression : gb.variable}
+          graphIterator = new GroupByOperator(graphIterator, tmpGB, options)
         }
-        graphIterator = new GroupByOperator(graphIterator, gb, options)
+        else {
+          graphIterator = new GroupByOperator(graphIterator, gb, options)
+        }
       }
     }
 
