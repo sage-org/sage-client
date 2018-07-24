@@ -211,7 +211,7 @@ class AggrOperator extends TransformIterator {
     if (notNumbers) {
       item[alias] = 'null'
     } else {
-      item[alias] = (Math.min(...vals)).toString()
+      item[alias] = valMap[(Math.min(...vals))].toString()
     }
     return item
   }
