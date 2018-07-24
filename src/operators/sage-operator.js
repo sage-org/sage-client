@@ -41,10 +41,26 @@ class SageOperator extends BufferedIterator {
    * @param {Object[]} optionals  - Optional BGPs to evaluate
    * @param {Object[]} filters  - Set of filters to evaluate
    */
-  constructor (bgp, sageClient, optionals = [], filters = []) {
+  constructor (bgp, sageClient,options, optionals = [], filters = []) {
     super()
-    bgp = JSON.parse(JSON.stringify(bgp).replace(/\"_:/g, '"?'))
-    this._bgp = bgp
+    this._options = options;
+    for (var i = 0; i < bgp.length; i++) {
+      var tp = bgp[i]
+      for (var variable in tp) {
+        if (tp[variable].startsWith('_:b')) {
+          var newVar = '?' + tp[variable].slice(2);
+          tp[variable] = newVar;
+          if (this._options.artificials != null) {
+            this._options.artificials.push(newVar);
+          }
+          else {
+            this._options.artificials = []
+            this._options.artificials.push(newVar);
+          }
+        }
+      }
+    }
+    this._bgp = bgp;
     this._optionals = optionals
     this._filters = filters
     this._next = null
