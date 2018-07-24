@@ -67,21 +67,6 @@ function SparqlIterator (source, query, options, url) {
     var graphIterator = new SparqlGroupsIterator(source,
       queryIterator.patterns || query.where, options)
 
-    // Create iterators for each order
-    for (var i = query.order && (query.order.length - 1); i >= 0; i--) {
-      let order = new SparqlExpressionEvaluator(query.order[i].expression)
-      let ascending = !query.order[i].descending
-      graphIterator = new SortIterator(graphIterator, function (a, b) {
-        let orderA = ''
-        let orderB = ''
-        try { orderA = order(a) } catch (error) { /* ignore order error */ }
-        try { orderB = order(b) } catch (error) { /* ignore order error */ }
-        if (orderA < orderB) return ascending ? -1 : 1
-        if (orderA > orderB) return ascending ? 1 : -1
-        return 0
-      }, options)
-    }
-
     if (query.group) {
       for (var i = 0; i < query.group.length; i++) {
         var gb = query.group[i]
@@ -127,6 +112,27 @@ function SparqlIterator (source, query, options, url) {
           }
         }
       }
+    }
+
+    // Create iterators for each order
+    for (var i = query.order && (query.order.length - 1); i >= 0; i--) {
+      let order = new SparqlExpressionEvaluator(query.order[i].expression)
+      let ascending = !query.order[i].descending
+      graphIterator = new SortIterator(graphIterator, function (a, b) {
+        let orderA = ''
+        let orderB = ''
+        try { orderA = order(a) } catch (error) { /* ignore order error */ }
+        try { orderB = order(b) } catch (error) { /* ignore order error */ }
+        if (!isNaN(orderA)) {
+          orderA = Number(orderA);
+        }
+        if (!isNaN(orderB)) {
+          orderB = Number(orderB);
+        }
+        if (orderA < orderB) return ascending ? -1 : 1
+        if (orderA > orderB) return ascending ? 1 : -1
+        return 0
+      }, options)
     }
 
     queryIterator.source = graphIterator
