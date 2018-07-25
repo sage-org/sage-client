@@ -49,85 +49,106 @@ class OperationOperator extends TransformIterator {
     this._expression = variable.expression
     source.on('error', err => console.error())
     this._operators = {
-      '+': function (a, b) {
+      '+': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         var res = Number(parsedA) + Number(parsedB);
         return isNaN(res) ? null : res;
       },
-      '-': function (a, b) {
+      '-': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         var res = Number(parsedA) - Number(parsedB);
         return isNaN(res) ? null : res;
       },
-      '*': function (a, b) {
+      '*': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         var res = Number(parsedA) * Number(parsedB);
         return isNaN(res) ? null : res;
        },
-      '/': function (a, b) {
+      '/': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         var res = Number(parsedA) / Number(parsedB);
         return isNaN(res) ? null : res;
        },
-      '=': function (a, b) {
+      '=': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA == parsedB;
       },
-      '!=': function (a, b) {
+      '!=': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA != parsedB;
        },
-      '<': function (a, b) {
+      '<': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA < parsedB;
        },
-      '<=': function (a, b) {
+      '<=': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA <= parsedB;
        },
-      '>': function (a, b) {
+      '>': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA > parsedB;
        },
-      '>=': function (a, b) {
+      '>=': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA >= parsedB;
        },
-      '!': function (a) {
+      '!': function (args) {
+        var a = args[0];
         var parsedA = utils.parseBinding("null",a).value;
         return !parsedA;
       },
-      '&&': function (a, b) {
+      '&&': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA && parsedB;
       },
-      '||': function (a, b) {
+      '||': function (args) {
+        var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA || parsedB;
       },
-      'str': function (a) {
+      'str': function (args) {
+        var a = args[0];
         var parsed = utils.parseBinding("null",a);
         return '"' + parsed.value + '"';
       },
-      'strlen': function(a) {
+      'strlen': function(args) {
+        var a = args[0];
         var parsedA = utils.parseBinding("null",a).value;
         return parsedA.length;
       },
-      'strlang': function(a,b) {
+      'strlang': function(args) {
+        var a = args[0], b = args[1];
         var parsed = utils.parseBinding("null",a);
         return (parsed.type == "literal") ? '"' + parsed.value + '"' + "@" + JSON.parse(b) : null
+      },
+      'strdt': function(args) {
+        var a = args[0], b = args[1];
+        var parsed = utils.parseBinding("null",a);
+        return (parsed.type == "literal") ? '"' + parsed.value + '"' + "^^<" + b +">" : null
       }
     };
   }
@@ -151,33 +172,22 @@ class OperationOperator extends TransformIterator {
   applyOperator(item,expression){
     var expr = _.cloneDeep(expression);
     var args = expr.args;
-    if (typeof args[0] === "object") {
-      args[0] = this.applyOperator(item,args[0])
-    }
-    else if (typeof args[0] === "string" && args[0].startsWith('?')){
-      if (Array.isArray(item.group) && item[args[0]] == null) {
-        args[0] = item.group[0][args[0]]
+    for (var i = 0; i < args.length; i++) {
+      if (typeof args[i] === "object") {
+        args[i] = this.applyOperator(item,args[i])
       }
-      else {
-        args[0] = item[args[0]]
-      }
-    }
-    if (args[1] != null) {
-      if (typeof args[1] === "object") {
-        args[1] = this.applyOperator(item,args[1])
-      }
-      else if (typeof args[1] === "string" && args[1].startsWith('?')){
-        if (Array.isArray(item.group) && item[args[1]] == null) {
-          args[1] = item.group[0][args[1]]
+      else if (typeof args[i] === "string" && args[i].startsWith('?')){
+        if (Array.isArray(item.group) && item[args[i]] == null) {
+          args[i] = item.group[0][args[i]]
         }
         else {
-          args[1] = item[args[1]]
+          args[i] = item[args[i]]
         }
       }
     }
     var func = this._operators[expr.operator];
     if (func != null) {
-      return this._operators[expr.operator](args[0],args[1]);
+      return this._operators[expr.operator](args);
     }
     else {
       throw new Error("Operation not implemented : " + expr.operator)
