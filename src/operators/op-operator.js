@@ -31,6 +31,8 @@ const utils = require('../formatters/utils')
 var N3Util = require('n3').Util
 var isLiteral = N3Util.isLiteral,
   literalValue = N3Util.getLiteralValue
+var crypto = require('crypto');
+
 
 /**
  * @extends TransformIterator
@@ -51,31 +53,67 @@ class OperationOperator extends TransformIterator {
     this._operators = {
       '+': function (args) {
         var a = args[0], b = args[1];
-        var parsedA = utils.parseBinding("null",a).value;
-        var parsedB = utils.parseBinding("null",b).value;
-        var res = Number(parsedA) + Number(parsedB);
-        return isNaN(res) ? null : res;
+        try {
+          var parsedA = utils.parseBinding("null",a);
+          var parsedB = utils.parseBinding("null",b);
+          if (parsedA.datatype != "http://www.w3.org/2001/XMLSchema#string" && parsedB.datatype != "http://www.w3.org/2001/XMLSchema#string") {
+            var res = Number(parsedA.value) + Number(parsedB.value);
+            return isNaN(res) ? null : res;
+          }
+          else {
+            return null
+          }
+        } catch (e) {
+          return null;
+        }
       },
       '-': function (args) {
         var a = args[0], b = args[1];
-        var parsedA = utils.parseBinding("null",a).value;
-        var parsedB = utils.parseBinding("null",b).value;
-        var res = Number(parsedA) - Number(parsedB);
-        return isNaN(res) ? null : res;
+        try {
+          var parsedA = utils.parseBinding("null",a);
+          var parsedB = utils.parseBinding("null",b);
+          if (parsedA.datatype != "http://www.w3.org/2001/XMLSchema#string" && parsedB.datatype != "http://www.w3.org/2001/XMLSchema#string") {
+            var res = Number(parsedA.value) - Number(parsedB.value);
+            return isNaN(res) ? null : res;
+          }
+          else {
+            return null
+          }
+        } catch (e) {
+          return null;
+        }
       },
       '*': function (args) {
         var a = args[0], b = args[1];
-        var parsedA = utils.parseBinding("null",a).value;
-        var parsedB = utils.parseBinding("null",b).value;
-        var res = Number(parsedA) * Number(parsedB);
-        return isNaN(res) ? null : res;
+        try {
+          var parsedA = utils.parseBinding("null",a);
+          var parsedB = utils.parseBinding("null",b);
+          if (parsedA.datatype != "http://www.w3.org/2001/XMLSchema#string" && parsedB.datatype != "http://www.w3.org/2001/XMLSchema#string") {
+            var res = Number(parsedA.value) * Number(parsedB.value);
+            return isNaN(res) ? null : res;
+          }
+          else {
+            return null
+          }
+        } catch (e) {
+          return null;
+        }
        },
       '/': function (args) {
         var a = args[0], b = args[1];
-        var parsedA = utils.parseBinding("null",a).value;
-        var parsedB = utils.parseBinding("null",b).value;
-        var res = Number(parsedA) / Number(parsedB);
-        return isNaN(res) ? null : res;
+        try {
+          var parsedA = utils.parseBinding("null",a);
+          var parsedB = utils.parseBinding("null",b);
+          if (parsedA.datatype != "http://www.w3.org/2001/XMLSchema#string" && parsedB.datatype != "http://www.w3.org/2001/XMLSchema#string") {
+            var res = Number(parsedA.value) / Number(parsedB.value);
+            return isNaN(res) ? null : res;
+          }
+          else {
+            return null
+          }
+        } catch (e) {
+          return null;
+        }
        },
       '=': function (args) {
         var a = args[0], b = args[1];
@@ -258,6 +296,87 @@ class OperationOperator extends TransformIterator {
         else {
           return res;
         }
+      },
+
+      'ucase': function(args) {
+        var a = utils.parseBinding("null",args[0]);
+        var res = a.value.toUpperCase();
+        switch (a.type) {
+          case 'literal+type':
+            return this['strdt']([res,a.datatype,true]);
+            break;
+          case 'literal+lang':
+            return this['strlang']([res,'"' + a.lang + '"',true]);
+            break;
+          default:
+            return res;
+            break;
+        }
+      },
+
+      'lcase': function(args) {
+        var a = utils.parseBinding("null",args[0]);
+        var res = a.value.toLowerCase();
+        switch (a.type) {
+          case 'literal+type':
+            return this['strdt']([res,a.datatype,true]);
+            break;
+          case 'literal+lang':
+            return this['strlang']([res,'"' + a.lang + '"',true]);
+            break;
+          default:
+            return res;
+            break;
+        }
+      },
+
+      'encode_for_uri': function(args) {
+        return encodeURI(utils.parseBinding("null",args[0]).value);
+      },
+
+      'contains': function (args) {
+        var a = utils.parseBinding("null",args[0]).value, b = utils.parseBinding("null",args[1]).value;
+        return a.indexOf(b) >= 0
+      },
+
+      'strstarts': function (args) {
+        var a = String(utils.parseBinding("null",args[0]).value),
+          b = String(utils.parseBinding("null",args[1]).value);
+        return a.startsWith(b)
+      },
+
+      'strends': function (args) {
+        var a = String(utils.parseBinding("null",args[0]).value),
+          b = String(utils.parseBinding("null",args[1]).value);
+        return a.endsWith(b)
+      },
+
+      'md5': function(args) {
+        var value = utils.parseBinding("null",args[0]).value;
+        var md5 = crypto.createHash('md5');
+        md5.update(value);
+        return md5.digest('hex');
+      },
+
+      'sha1': function(args) {
+        var value = utils.parseBinding("null",args[0]).value;
+        var sha1 = crypto.createHash('sha1');
+        sha1.update(value);
+        return sha1.digest('hex');
+      },
+
+      'sha256': function(args) {
+        var value = utils.parseBinding("null",args[0]).value;
+        var sha256 = crypto.createHash('sha256');
+        sha256.update(value);
+        return sha256.digest('hex');
+      },
+
+      'sha512': function(args) {
+        var value = utils.parseBinding("null",args[0]).value;
+        var sha512 = crypto.createHash('sha512');
+        sha512.update(value);
+        return sha512.digest('hex');
       },
     };
   }
