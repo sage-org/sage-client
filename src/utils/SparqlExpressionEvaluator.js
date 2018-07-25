@@ -153,6 +153,16 @@ operators = {
   'contains': function (string, substring) {
     return string.indexOf(substring) >= 0
   },
+  'strstarts': function (string, substring) {
+    var a = String(utils.parseBinding("null",string).value),
+      b = String(utils.parseBinding("null",substring).value);
+    return a.startsWith(b)
+  },
+  'strends': function (string, substring) {
+    var a = String(utils.parseBinding("null",string).value),
+      b = String(utils.parseBinding("null",substring).value);
+    return a.endsWith(b)
+  },
   'regex': function (subject, pattern) {
     return new RegExp(pattern).test(subject)
   },
@@ -243,7 +253,7 @@ operators = {
 // Tag all operators that have boolean results
 [
   '!', '&&', '||', '=', '!=', '<', '<=', '>', '>=',
-  'langmatches', 'contains', 'regex', 'isiri', 'isblank', 'isliteral','isnumeric' , 'sameterm','in','notin'
+  'langmatches', 'contains', 'strstarts', 'strends', 'regex', 'isiri', 'isblank', 'isliteral','isnumeric' , 'sameterm','in','notin'
 ].forEach(function (operatorName) {
   operators[operatorName].resultType = 'boolean'
 })
