@@ -27,7 +27,6 @@
   "dependencies": {
     "asynciterator": "^1.1.1",
     "commander": "^2.15.1",
-    "crypto": "^1.0.1",
     "ldf-client": "^2.0.5",
     "lodash": "^4.17.5",
     "n3": "^0.11.3",
