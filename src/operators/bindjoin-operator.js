@@ -63,7 +63,7 @@ class BindJoinOperator extends BufferedIterator {
 
           if (mapping != null) {
             var cpt = that._bucket.length;
-            var bind = JSON.parse(JSON.stringify(that._bgp))
+            var bind = Object.assign({}, that._bgp)
             for (var i = 0; i < bind.length; i++) {
               for (var v in mapping) {
                 var tp = bind[i];

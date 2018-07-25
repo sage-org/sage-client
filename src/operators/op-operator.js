@@ -228,12 +228,16 @@ class OperationOperator extends TransformIterator {
         var type = parsed[0].type,
           sameDT = (type === "literal+type") ? true : false,
           sameLang = (type === "literal+lang") ? true : false,
-          dt = (type === "literal+type") ? parsed[0].datatype : null,
-          lang = (type === "literal+lang") ? parsed[0].lang : null;
+          dt = (sameDT) ? parsed[0].datatype : null,
+          lang = (sameLang) ? parsed[0].lang : null,
+          invalidType = (sameDT && dt != "http://www.w3.org/2001/XMLSchema#string") ? true : false;
         for (var i = 1; i < parsed.length; i++) {
           var elem = parsed[i];
           if (type != elem.type) {
             sameType = false;
+          }
+          if (elem.type === "literal+type" && elem.datatype != "http://www.w3.org/2001/XMLSchema#string") {
+            invalidType = true;
           }
           if (dt != elem.datatype) {
             sameDT = false;
@@ -242,7 +246,10 @@ class OperationOperator extends TransformIterator {
             sameLang = false;
           }
         }
-        if (sameType && sameDT) {
+        if (invalidType) {
+          return null;
+        }
+        else if (sameType && sameDT) {
           return this['strdt']([res,dt,true])
         }
         else if (sameType && sameLang) {

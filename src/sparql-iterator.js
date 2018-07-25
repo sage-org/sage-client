@@ -339,7 +339,7 @@ function SparqlGroupIterator (source, group, options) {
 
   switch (group.type) {
     case 'bgp':
-      var copyGroup = JSON.parse(JSON.stringify(group))
+      var copyGroup = Object.assign({}, group);
       var ret = transformPath(copyGroup.triples, copyGroup,options)
       var bgp = ret[0]
       var union = ret[1]
