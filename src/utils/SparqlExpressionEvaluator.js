@@ -184,6 +184,26 @@ operators = {
     return !isIRI(a) && !isBlank(a)
   },
 
+  'isnumeric': function (a) {
+    return !isNaN(a);
+  },
+
+  'abs': function (a) {
+    return Math.abs(a);
+  },
+
+  'ceil': function (a) {
+    return Math.ceil(a);
+  },
+
+  'floor': function (a) {
+    return Math.floor(a);
+  },
+
+  'round': function (a) {
+    return Math.round(a);
+  },
+
   'sameterm': function (a, b) {
     return a === b
   },
@@ -223,7 +243,7 @@ operators = {
 // Tag all operators that have boolean results
 [
   '!', '&&', '||', '=', '!=', '<', '<=', '>', '>=',
-  'langmatches', 'contains', 'regex', 'isiri', 'isblank', 'isliteral', 'sameterm','in','notin'
+  'langmatches', 'contains', 'regex', 'isiri', 'isblank', 'isliteral','isnumeric' , 'sameterm','in','notin'
 ].forEach(function (operatorName) {
   operators[operatorName].resultType = 'boolean'
 })

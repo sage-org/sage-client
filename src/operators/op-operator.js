@@ -143,13 +143,115 @@ class OperationOperator extends TransformIterator {
       'strlang': function(args) {
         var a = args[0], b = args[1];
         var parsed = utils.parseBinding("null",a);
+        if (args[2] != null && args[2]) {
+          parsed = {type:'literal',value:a};
+        }
         return (parsed.type == "literal") ? '"' + parsed.value + '"' + "@" + JSON.parse(b) : null
       },
       'strdt': function(args) {
         var a = args[0], b = args[1];
         var parsed = utils.parseBinding("null",a);
+        if (args[2] != null && args[2]) {
+          parsed = {type:'literal',value:a};
+        }
         return (parsed.type == "literal") ? '"' + parsed.value + '"' + "^^<" + b +">" : null
-      }
+      },
+      'substr': function(args) {
+        var a = utils.parseBinding("null",args[0]), b = Number(utils.parseBinding("null",args[1]).value)-1, c = null;
+        if (args.length > 2) {
+          c = b + Number(utils.parseBinding("null",args[2]).value);
+        }
+        var res = (c != null) ? a.value.substring(b,c) : a.value.substring(b)
+        switch (a.type) {
+          case 'literal+type':
+            return this['strdt']([res,a.datatype,true]);
+            break;
+          case 'literal+lang':
+            return this['strlang']([res,'"' + a.lang + '"',true]);
+            break;
+          default:
+            return res;
+            break;
+        }
+      },
+
+      'isnumeric': function (args) {
+        var a = utils.parseBinding("null",args[0]).value;
+        return !isNaN(a);
+      },
+
+      'abs': function (args) {
+        var a = Number(utils.parseBinding("null",args[0]).value);
+        if (isNaN(a)) {
+          return null
+        }
+        else {
+          return Math.abs(a);
+        }
+      },
+
+      'ceil': function (args) {
+        var a = Number(utils.parseBinding("null",args[0]).value);
+        if (isNaN(a)) {
+          return null
+        }
+        else {
+          return Math.ceil(a);
+        }
+      },
+
+      'floor': function (args) {
+        var a = Number(utils.parseBinding("null",args[0]).value);
+        if (isNaN(a)) {
+          return null
+        }
+        else {
+          return Math.floor(a);
+        }
+      },
+
+      'round': function (args) {
+        var a = Number(utils.parseBinding("null",args[0]).value);
+        if (isNaN(a)) {
+          return null
+        }
+        else {
+          return Math.round(a);
+        }
+      },
+
+      'concat': function (args) {
+        var parsed = args.map(function(arg){return utils.parseBinding("null",arg)})
+        var vals = parsed.map(function(arg){return arg.value})
+        var res = _.join(vals,'');
+        var sameType = true;
+        var type = parsed[0].type,
+          sameDT = (type === "literal+type") ? true : false,
+          sameLang = (type === "literal+lang") ? true : false,
+          dt = (type === "literal+type") ? parsed[0].datatype : null,
+          lang = (type === "literal+lang") ? parsed[0].lang : null;
+        for (var i = 1; i < parsed.length; i++) {
+          var elem = parsed[i];
+          if (type != elem.type) {
+            sameType = false;
+          }
+          if (dt != elem.datatype) {
+            sameDT = false;
+          }
+          if (lang != elem.lang) {
+            sameLang = false;
+          }
+        }
+        if (sameType && sameDT) {
+          return this['strdt']([res,dt,true])
+        }
+        else if (sameType && sameLang) {
+          return this['strlang']([res,'"' + lang + '"',true])
+        }
+        else {
+          return res;
+        }
+      },
     };
   }
 
