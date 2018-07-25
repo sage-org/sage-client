@@ -52,22 +52,26 @@ class OperationOperator extends TransformIterator {
       '+': function (a, b) {
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
-        return Number(parsedA) + Number(parsedB);
+        var res = Number(parsedA) + Number(parsedB);
+        return isNaN(res) ? null : res;
       },
       '-': function (a, b) {
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
-        return Number(parsedA) - Number(parsedB);
+        var res = Number(parsedA) - Number(parsedB);
+        return isNaN(res) ? null : res;
       },
       '*': function (a, b) {
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
-        return Number(parsedA) * Number(parsedB);
+        var res = Number(parsedA) * Number(parsedB);
+        return isNaN(res) ? null : res;
        },
       '/': function (a, b) {
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
-        return Number(parsedA) / Number(parsedB);
+        var res = Number(parsedA) / Number(parsedB);
+        return isNaN(res) ? null : res;
        },
       '=': function (a, b) {
         var parsedA = utils.parseBinding("null",a).value;
@@ -119,7 +123,7 @@ class OperationOperator extends TransformIterator {
       },
       'strlen': function(a) {
         var parsedA = utils.parseBinding("null",a).value;
-        return parsedA.length; 
+        return parsedA.length;
       },
       'strlang': function(a,b) {
         var parsed = utils.parseBinding("null",a);
