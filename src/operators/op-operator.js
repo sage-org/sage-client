@@ -579,7 +579,7 @@ class OperationOperator extends TransformIterator {
         try {
           var value = utils.parseBinding("null",args[0]).value;
           var prefix = that._options.base || "";
-          return "<" + prefix + value + ">";
+          return prefix + value;
         } catch (e) {
           return null
         }
@@ -589,7 +589,7 @@ class OperationOperator extends TransformIterator {
         try {
           var value = utils.parseBinding("null",args[0]).value;
           var prefix = that._options.base || "";
-          return "<" + prefix + value + ">";
+          return prefix + value;
         } catch (e) {
           return null
         }
