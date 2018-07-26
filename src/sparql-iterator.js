@@ -410,6 +410,8 @@ function SparqlGroupIterator (source, group, options) {
       return new UnionOperator(...group.patterns.map(function (patternToken) {
         return new SparqlGroupIterator(source.clone(), patternToken, childOptions)
       }))
+    case 'bind':
+      return new OperationOperator(source, group, options)
     case 'filter':
     // A set of bindings does not match the filter
     // if it evaluates to 0/false, or errors

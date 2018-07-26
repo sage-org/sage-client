@@ -679,6 +679,24 @@ class OperationOperator extends TransformIterator {
           return null;
         }
       },
+
+      'replace': function(args) {
+        var a = utils.parseBinding("null",args[0]),
+          b = utils.parseBinding("null",args[1]).value,
+          c = utils.parseBinding("null",args[2]).value;
+        if (a.datatype != null && a.datatype != "http://www.w3.org/2001/XMLSchema#string") {
+          return null
+        }
+        else {
+          try {
+            b = new RegExp(b,'g');
+            return a.value.replace(b,c);
+          } catch (e) {
+            b = utils.parseBinding("null",args[1]).value;
+            return a.value.replace(b,c);
+          }
+        }
+      },
     };
   }
 

@@ -53,12 +53,7 @@ evaluators = {
     if (expression[0] !== '?') { return function () { return utils.parseBinding("null",expression).value; } }
     // Evaluate a variable to its value
     else { return function (bindings) {
-      if (utils.parseBinding(expression,bindings[expression]).type === "literal+lang") {
         return bindings && bindings[expression];
-      }
-      else {
-        return bindings && utils.parseBinding(expression,bindings[expression]).value;
-      }
     }
   }
   },
@@ -224,7 +219,11 @@ operators = {
 
   'notin': function (a, b) {
     return !b.includes(a);
-  }
+  },
+
+  'datatype': function (a) {
+    return utils.parseBinding("null",a).datatype;
+  },
 };
 
 // Tag all operators that expect their arguments to be numeric
