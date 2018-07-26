@@ -50,7 +50,7 @@ evaluators = {
   // Evaluates an IRI, literal, or variable
   string: function (expression) {
     // Evaluate a IRIs or literal to its own value
-    if (expression[0] !== '?') { return function () { return utils.parseBinding("null",expression).value; } }
+    if (expression[0] !== '?') { return function () { return expression } }
     // Evaluate a variable to its value
     else { return function (bindings) {
         return bindings && bindings[expression];
@@ -125,7 +125,7 @@ operators = {
   '-': function (a, b) { return a - b },
   '*': function (a, b) { return a * b },
   '/': function (a, b) { return a / b },
-  '=': function (a, b) { return a == b },
+  '=': function (a, b) { return a == b},
   '!=': function (a, b) { return a !== b },
   '<': function (a, b) { return a < b },
   '<=': function (a, b) { return a <= b },
@@ -146,7 +146,9 @@ operators = {
            langTag.substr(1, langRange.length + 1) === langRange + '-'
   },
   'contains': function (string, substring) {
-    return string.indexOf(substring) >= 0
+    var a = String(utils.parseBinding("null",string).value),
+      b = String(utils.parseBinding("null",substring).value);
+    return a.indexOf(b) >= 0
   },
   'strstarts': function (string, substring) {
     var a = String(utils.parseBinding("null",string).value),
@@ -190,6 +192,7 @@ operators = {
   },
 
   'isnumeric': function (a) {
+    a = utils.parseBinding("null",a).value;
     return !isNaN(a);
   },
 
