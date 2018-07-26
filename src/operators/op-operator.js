@@ -115,8 +115,17 @@ class OperationOperator extends TransformIterator {
           var parsedA = utils.parseBinding("null",a);
           var parsedB = utils.parseBinding("null",b);
           if (parsedA.datatype != "http://www.w3.org/2001/XMLSchema#string" && parsedB.datatype != "http://www.w3.org/2001/XMLSchema#string") {
-            var res = Number(parsedA.value) / Number(parsedB.value);
-            return isNaN(res) ? null : res;
+            if (Number(parsedB.value) === 0) {
+              return null
+            }
+            else {
+              var res = Number(parsedA.value) / Number(parsedB.value);
+              var result = isNaN(res) ? null : (Number.isInteger(res) ? res.toFixed(1) : res);
+              if (result != null) {
+                result = this['strdt']([result,"http://www.w3.org/2001/XMLSchema#decimal",true]);
+              }
+              return result;
+            }
           }
           else {
             return null
@@ -128,8 +137,16 @@ class OperationOperator extends TransformIterator {
 
       '=': function (args) {
         var a = args[0], b = args[1];
-        var parsedA = utils.parseBinding("null",a).value;
-        var parsedB = utils.parseBinding("null",b).value;
+        try {
+          var parsedA = utils.parseBinding("null",a).value;
+        } catch (e) {
+          var parsedA = null;
+        }
+        try {
+          var parsedB = utils.parseBinding("null",b).value;
+        } catch (e) {
+          var parsedB = null;
+        }
         return parsedA == parsedB;
       },
 
@@ -410,7 +427,7 @@ class OperationOperator extends TransformIterator {
       'hours': function(args) {
         try {
           var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
-          return this['strdt']([date.hours(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+          return this['strdt']([date.hours(),"http://www.w3.org/2001/XMLSchema#integer",true]);
         } catch (e) {
           return null
         }
@@ -419,7 +436,7 @@ class OperationOperator extends TransformIterator {
       'minutes': function(args) {
         try {
           var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
-          return this['strdt']([date.minutes(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+          return this['strdt']([date.minutes(),"http://www.w3.org/2001/XMLSchema#integer",true]);
         } catch (e) {
           return null
         }
@@ -428,7 +445,7 @@ class OperationOperator extends TransformIterator {
       'seconds': function(args) {
         try {
           var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
-          return this['strdt']([date.seconds(),"http://www.w3.org/2001/XMLSchema#decimal",true]);;
+          return this['strdt']([date.seconds(),"http://www.w3.org/2001/XMLSchema#decimal",true]);
         } catch (e) {
           return null
         }
@@ -437,7 +454,7 @@ class OperationOperator extends TransformIterator {
       'year': function(args) {
         try {
           var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
-          return this['strdt']([date.year(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+          return this['strdt']([date.year(),"http://www.w3.org/2001/XMLSchema#integer",true]);
         } catch (e) {
           return null
         }
@@ -446,7 +463,7 @@ class OperationOperator extends TransformIterator {
       'month': function(args) {
         try {
           var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
-          return this['strdt']([date.month()+1,"http://www.w3.org/2001/XMLSchema#integer",true]);;
+          return this['strdt']([date.month()+1,"http://www.w3.org/2001/XMLSchema#integer",true]);
         } catch (e) {
           return null
         }
@@ -455,7 +472,7 @@ class OperationOperator extends TransformIterator {
       'day': function(args) {
         try {
           var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
-          return this['strdt']([date.date(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+          return this['strdt']([date.date(),"http://www.w3.org/2001/XMLSchema#integer",true]);
         } catch (e) {
           return null
         }
@@ -523,6 +540,142 @@ class OperationOperator extends TransformIterator {
         }
         return bnode;
       },
+
+      'in': function (args) {
+        var a = utils.parseBinding("null",args[0]),
+          b = args[1].map(function(elem){return utils.parseBinding("null",elem)});
+        var filteredDT = _.filter(b,{type:a.type,value:a.value,datatype:a.datatype})
+        var filteredLang = _.filter(b,{type:a.type,value:a.value,lang:a.lang})
+        return filteredDT.length > 0 || filteredLang.length > 0;
+      },
+
+      'notin': function (a, b) {
+        var a = utils.parseBinding("null",args[0]),
+          b = args[1].map(function(elem){return utils.parseBinding("null",elem)});
+        var filteredDT = _.filter(b,{type:a.type,value:a.value,datatype:a.datatype})
+        var filteredLang = _.filter(b,{type:a.type,value:a.value,lang:a.lang})
+        return filteredDT.length === 0 && filteredLang.length === 0;
+      },
+
+      'now': function(args) {
+        try {
+          var date = moment().format();
+          return this['strdt']([date,"http://www.w3.org/2001/XMLSchema#dateTime",true]);
+        } catch (e) {
+          return null
+        }
+      },
+
+      'rand': function(args) {
+        try {
+          var rand = Math.random();
+          return this['strdt']([rand,"http://www.w3.org/2001/XMLSchema#double",true]);
+        } catch (e) {
+          return null
+        }
+      },
+
+      'iri': function(args) {
+        try {
+          var value = utils.parseBinding("null",args[0]).value;
+          var prefix = that._options.base || "";
+          return "<" + prefix + value + ">";
+        } catch (e) {
+          return null
+        }
+      },
+
+      'uri': function(args) {
+        try {
+          var value = utils.parseBinding("null",args[0]).value;
+          var prefix = that._options.base || "";
+          return "<" + prefix + value + ">";
+        } catch (e) {
+          return null
+        }
+      },
+
+      'lang': function(args) {
+        try {
+          return utils.parseBinding("null",args[0]).lang.toLowerCase();
+        } catch (e) {
+          return null
+        }
+      },
+
+      'if': function(args) {
+        if (args[0]) {
+          return args[1];
+        }
+        else {
+          return args[2];
+        }
+      },
+
+      'coalesce': function(args) {
+        var vals = _.without(args, undefined,null);
+        return (vals.length > 0) ? vals[0] : null;
+      },
+
+      'strbefore': function(args) {
+        try {
+          var a = utils.parseBinding("null",args[0]),
+            b = utils.parseBinding("null",args[1]);
+          if (b.lang != null && b.lang != a.lang) {
+            return null
+          }
+          else if (a.datatype != null && b.datatype != null && b.datatype != a.datatype) {
+            return null;
+          }
+          else {
+            var end = a.value.indexOf(b.value)
+            var type = a.type;
+            var res = (end >= 0) ? a.value.slice(0,end) : "";
+            if (type === "literal+type") {
+              return (a.datatype === "http://www.w3.org/2001/XMLSchema#string") ? this['strdt']([res,a.datatype,true]) : res;
+            }
+            else if (type === "literal+lang"){
+              return this['strlang']([res,'"' + a.lang + '"',true])
+            }
+            else {
+              return res;
+            }
+
+          }
+        } catch (e) {
+          return null;
+        }
+      },
+
+      'strafter': function(args) {
+        try {
+          var a = utils.parseBinding("null",args[0]),
+            b = utils.parseBinding("null",args[1]);
+          if (b.lang != null && b.lang != a.lang) {
+            return null
+          }
+          else if (a.datatype != null && b.datatype != null && b.datatype != a.datatype) {
+            return null;
+          }
+          else {
+            var start = a.value.indexOf(b.value)
+            var type = a.type;
+            var res = (start >= 0) ? a.value.slice(start+1) : "";
+            if (type === "literal+type") {
+              return (a.datatype === "http://www.w3.org/2001/XMLSchema#string") ? this['strdt']([res,a.datatype,true]) : res;
+            }
+            else if (type === "literal+lang"){
+              return this['strlang']([res,'"' + a.lang + '"',true])
+            }
+            else {
+              return res;
+            }
+
+          }
+        } catch (e) {
+          return null;
+        }
+      },
     };
   }
 
@@ -547,7 +700,7 @@ class OperationOperator extends TransformIterator {
     var expr = _.cloneDeep(expression);
     var args = expr.args;
     for (var i = 0; i < args.length; i++) {
-      if (typeof args[i] === "object") {
+      if (typeof args[i] === "object" && !Array.isArray(args[i])) {
         args[i] = this.applyOperator(item,args[i])
       }
       else if (typeof args[i] === "string" && args[i].startsWith('?')){
