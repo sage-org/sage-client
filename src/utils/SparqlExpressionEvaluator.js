@@ -121,16 +121,56 @@ evaluators.functionCall = evaluators.operation
 
 // Operators for each of the operator types
 operators = {
-  '+': function (a, b) { return a + b },
-  '-': function (a, b) { return a - b },
-  '*': function (a, b) { return a * b },
-  '/': function (a, b) { return a / b },
-  '=': function (a, b) { return a == b},
-  '!=': function (a, b) { return a !== b },
-  '<': function (a, b) { return a < b },
-  '<=': function (a, b) { return a <= b },
-  '>': function (a, b) { return a > b },
-  '>=': function (a, b) { return a >= b },
+  '+': function (a, b) {
+    a = Number(utils.parseBinding("null",a).value);
+    b = Number(utils.parseBinding("null",b).value);
+    return a > b
+  },
+  '-': function (a, b) {
+    a = Number(utils.parseBinding("null",a).value);
+    b = Number(utils.parseBinding("null",b).value);
+    return a - b
+  },
+  '*': function (a, b) {
+    a = Number(utils.parseBinding("null",a).value);
+    b = Number(utils.parseBinding("null",b).value);
+    return a * b
+  },
+  '/': function (a, b) {
+    a = Number(utils.parseBinding("null",a).value);
+    b = Number(utils.parseBinding("null",b).value);
+    return a / b
+  },
+  '=': function (a, b) {
+    a = utils.parseBinding("null",a).value;
+    b = utils.parseBinding("null",b).value;
+    return a == b
+  },
+  '!=': function (a, b) {
+    a = utils.parseBinding("null",a).value;
+    b = utils.parseBinding("null",b).value;
+    return a != b
+  },
+  '<': function (a, b) {
+    a = utils.parseBinding("null",a).value;
+    b = utils.parseBinding("null",b).value;
+    return a < b
+  },
+  '<=': function (a, b) {
+    a = utils.parseBinding("null",a).value;
+    b = utils.parseBinding("null",b).value;
+    return a <= b
+  },
+  '>': function (a, b) {
+    a = utils.parseBinding("null",a).value;
+    b = utils.parseBinding("null",b).value;
+    return a > b
+  },
+  '>=': function (a, b) {
+    a = utils.parseBinding("null",a).value;
+    b = utils.parseBinding("null",b).value;
+    return a >= b
+  },
   '!': function (a) { return !a },
   '&&': function (a, b) { return a && b },
   '||': function (a, b) { return a || b },
@@ -213,14 +253,20 @@ operators = {
   },
 
   'sameterm': function (a, b) {
+    a = utils.parseBinding("null",a).value;
+    b = utils.parseBinding("null",b).value;
     return a === b
   },
 
   'in': function (a, b) {
+    a = utils.parseBinding("null",a).value,
+      b = b.map(function(elem){return utils.parseBinding("null",elem).value});
     return b.includes(a);
   },
 
   'notin': function (a, b) {
+    a = utils.parseBinding("null",a).value,
+      b = b.map(function(elem){return utils.parseBinding("null",elem).value});
     return !b.includes(a);
   },
 
@@ -229,14 +275,6 @@ operators = {
   },
 };
 
-// Tag all operators that expect their arguments to be numeric
-// TODO: Comparison operators can take simple literals and strings as well
-[
-  '+', '-', '*', '/', '<', '<=', '>', '>=',
-  XSD_INTEGER, XSD_DOUBLE
-].forEach(function (operatorName) {
-  operators[operatorName].type = 'numeric'
-});
 
 // Tag all operators that expect their arguments to be boolean
 [
