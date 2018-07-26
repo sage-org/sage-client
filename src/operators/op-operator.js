@@ -27,6 +27,7 @@ SOFTWARE.
 const { TransformIterator } = require('asynciterator')
 const _ = require('lodash')
 const map = require('lodash/map')
+var moment = require('moment');
 const utils = require('../formatters/utils')
 var N3Util = require('n3').Util
 var isLiteral = N3Util.isLiteral,
@@ -45,10 +46,16 @@ class OperationOperator extends TransformIterator {
    * @memberof Operators
    * @param {AsyncIterator} source - The source operator
    */
-  constructor (source, variable) {
+  constructor (source, variable,options) {
     super(source)
     this._variable = variable.variable
     this._expression = variable.expression
+    this._options = options;
+    var that = this;
+    this._currentItem = null;
+    if (this._options.bnode_count == null) {
+      this._options.bnode_count = 0;
+    }
     source.on('error', err => console.error())
     this._operators = {
       '+': function (args) {
@@ -67,6 +74,7 @@ class OperationOperator extends TransformIterator {
           return null;
         }
       },
+
       '-': function (args) {
         var a = args[0], b = args[1];
         try {
@@ -83,6 +91,7 @@ class OperationOperator extends TransformIterator {
           return null;
         }
       },
+
       '*': function (args) {
         var a = args[0], b = args[1];
         try {
@@ -99,6 +108,7 @@ class OperationOperator extends TransformIterator {
           return null;
         }
        },
+
       '/': function (args) {
         var a = args[0], b = args[1];
         try {
@@ -115,85 +125,103 @@ class OperationOperator extends TransformIterator {
           return null;
         }
        },
+
       '=': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA == parsedB;
       },
+
       '!=': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA != parsedB;
        },
+
       '<': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA < parsedB;
        },
+
       '<=': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA <= parsedB;
        },
+
       '>': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA > parsedB;
        },
+
       '>=': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA >= parsedB;
        },
+
       '!': function (args) {
         var a = args[0];
         var parsedA = utils.parseBinding("null",a).value;
         return !parsedA;
       },
+
       '&&': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA && parsedB;
       },
+
       '||': function (args) {
         var a = args[0], b = args[1];
         var parsedA = utils.parseBinding("null",a).value;
         var parsedB = utils.parseBinding("null",b).value;
         return parsedA || parsedB;
       },
+
       'str': function (args) {
         var a = args[0];
         var parsed = utils.parseBinding("null",a);
         return '"' + parsed.value + '"';
       },
+
       'strlen': function(args) {
         var a = args[0];
         var parsedA = utils.parseBinding("null",a).value;
         return parsedA.length;
       },
+
       'strlang': function(args) {
         var a = args[0], b = args[1];
-        var parsed = utils.parseBinding("null",a);
         if (args[2] != null && args[2]) {
           parsed = {type:'literal',value:a};
+        }
+        else {
+          var parsed = utils.parseBinding("null",a);
         }
         return (parsed.type == "literal") ? '"' + parsed.value + '"' + "@" + JSON.parse(b) : null
       },
+
       'strdt': function(args) {
         var a = args[0], b = args[1];
-        var parsed = utils.parseBinding("null",a);
         if (args[2] != null && args[2]) {
           parsed = {type:'literal',value:a};
         }
+        else {
+          var parsed = utils.parseBinding("null",a);
+        }
         return (parsed.type == "literal") ? '"' + parsed.value + '"' + "^^<" + b +">" : null
       },
+
       'substr': function(args) {
         var a = utils.parseBinding("null",args[0]), b = Number(utils.parseBinding("null",args[1]).value)-1, c = null;
         if (args.length > 2) {
@@ -378,6 +406,123 @@ class OperationOperator extends TransformIterator {
         sha512.update(value);
         return sha512.digest('hex');
       },
+
+      'hours': function(args) {
+        try {
+          var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
+          return this['strdt']([date.hours(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+        } catch (e) {
+          return null
+        }
+      },
+
+      'minutes': function(args) {
+        try {
+          var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
+          return this['strdt']([date.minutes(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+        } catch (e) {
+          return null
+        }
+      },
+
+      'seconds': function(args) {
+        try {
+          var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
+          return this['strdt']([date.seconds(),"http://www.w3.org/2001/XMLSchema#decimal",true]);;
+        } catch (e) {
+          return null
+        }
+      },
+
+      'year': function(args) {
+        try {
+          var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
+          return this['strdt']([date.year(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+        } catch (e) {
+          return null
+        }
+      },
+
+      'month': function(args) {
+        try {
+          var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
+          return this['strdt']([date.month()+1,"http://www.w3.org/2001/XMLSchema#integer",true]);;
+        } catch (e) {
+          return null
+        }
+      },
+
+      'day': function(args) {
+        try {
+          var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
+          return this['strdt']([date.date(),"http://www.w3.org/2001/XMLSchema#integer",true]);;
+        } catch (e) {
+          return null
+        }
+      },
+
+      'timezone': function(args) {
+        try {
+          var value = utils.parseBinding("null",args[0]).value;
+          if (value.length < 20) {
+            return null
+          }
+          else {
+            var date = moment.parseZone(utils.parseBinding("null",args[0]).value);
+            var zone = date.utcOffset() / 60
+            if (zone > 0) {
+              zone = "PT" + zone + "H";
+            }
+            else if (zone < 0) {
+              zone = "-PT" + Math.abs(zone) + "H";
+            }
+            else {
+              zone = "PT0S";
+            }
+            return this['strdt']([zone,"http://www.w3.org/2001/XMLSchema#dayTimeDuration",true]);
+          }
+        } catch (e) {
+          return null
+        }
+      },
+
+      'tz': function(args) {
+        return utils.parseBinding("null",args[0]).value.slice(19);
+      },
+
+      'BNODE': function(args) {
+        if (args.length > 0) {
+          var value = utils.parseBinding("null",args[0]).value;
+        }
+        else {
+          var value = null;
+        }
+        if (that._options.artificials == null) {
+          that._options.artificials = [];
+        }
+        if (!that._options.artificials.includes('bnode_map')) {
+          that._options.artificials.push('bnode_map');
+        }
+
+        if (that._currentItem.bnode_map != null) {
+          var bnode = null;
+          if (that._currentItem.bnode_map[value] != null && value != null) {
+            bnode = that._currentItem.bnode_map[value];
+          }
+          else {
+            bnode = "b"+that._options.bnode_count;
+            that._currentItem.bnode_map[value] = bnode;
+            that._options.bnode_count ++;
+          }
+        }
+        else {
+          that._currentItem.bnode_map = {};
+          var bnode = "b"+that._options.bnode_count;
+          that._currentItem.bnode_map[value] = bnode;
+          that._options.bnode_count ++;
+        }
+        return bnode;
+      },
     };
   }
 
@@ -389,9 +534,10 @@ class OperationOperator extends TransformIterator {
    * @return {void}
    */
   _transform (item, done) {
+    this._currentItem = item;
     var value = this.applyOperator(item,this._expression);
     if (value != null) {
-      item[this._variable] = this.applyOperator(item,this._expression).toString()
+      item[this._variable] = value.toString()
     }
     this._push(item);
     done()

@@ -65,14 +65,19 @@ function SparqlIterator (source, query, options, url) {
       query.where.push({type: 'values',values:query.values})
     }
     // Create an iterator for bindings of the query's graph pattern
-    var graphIterator = new SparqlGroupsIterator(source,
-      queryIterator.patterns || query.where, options)
+    if (queryIterator.patterns != null || (queryIterator.where != null && queryIterator.where.length > 0)) {
+      var graphIterator = new SparqlGroupsIterator(source,
+        queryIterator.patterns || query.where, options)
+    }
+    else {
+      var graphIterator = new AsyncIterator.SingletonIterator({})
+    }
 
     if (query.group) {
       for (var i = 0; i < query.group.length; i++) {
         var gb = query.group[i]
         if (gb.expression != null  && typeof gb.expression !== 'string' && gb.expression.type === "operation") {
-          graphIterator = new OperationOperator(graphIterator, gb)
+          graphIterator = new OperationOperator(graphIterator, gb, options)
           var tmpGB = {expression : gb.variable}
           graphIterator = new GroupByOperator(graphIterator, tmpGB, options)
         }
@@ -113,7 +118,7 @@ function SparqlIterator (source, query, options, url) {
         var variable = query.variables[i]
         if (variable.expression != null && typeof variable.expression !== 'string') {
           if (variable.expression.type === "operation") {
-            graphIterator = new OperationOperator(graphIterator, variable)
+            graphIterator = new OperationOperator(graphIterator, variable, options)
           }
           else if (variable.expression.type === "aggregate") {
             if (query.group) {
