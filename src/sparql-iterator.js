@@ -65,7 +65,7 @@ function SparqlIterator (source, query, options, url) {
       query.where.push({type: 'values',values:query.values})
     }
     // Create an iterator for bindings of the query's graph pattern
-    if (queryIterator.patterns != null || (queryIterator.where != null && queryIterator.where.length > 0)) {
+    if (queryIterator.patterns != null || (query.where != null && query.where.length > 0)) {
       var graphIterator = new SparqlGroupsIterator(source,
         queryIterator.patterns || query.where, options)
     }
