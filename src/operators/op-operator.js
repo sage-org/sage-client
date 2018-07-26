@@ -663,7 +663,7 @@ class OperationOperator extends TransformIterator {
           else {
             var start = a.value.indexOf(b.value)
             var type = a.type;
-            var res = (start >= 0) ? a.value.slice(start+1) : "";
+            var res = (start >= 0) ? a.value.slice(start+b.value.length) : "";
             if (type === "literal+type") {
               return (a.datatype === "http://www.w3.org/2001/XMLSchema#string") ? this['strdt']([res,a.datatype,true]) : res;
             }
