@@ -607,6 +607,9 @@ class OperationOperator extends TransformIterator {
         if (args[0]) {
           return args[1];
         }
+        else if(args[0] === null){
+          return null
+        }
         else {
           return args[2];
         }
