@@ -704,6 +704,14 @@ class OperationOperator extends TransformIterator {
         }
       },
 
+      'datatype': function (args) {
+        try {
+          return utils.parseBinding("null",args[0]).datatype;
+        } catch (e) {
+            return null;
+        }
+      },
+
       'select': function(args) {
         try {
           return args[0];
