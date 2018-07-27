@@ -286,17 +286,21 @@ SparqlAskIterator.prototype._flush = function (done) {
 // Creates an iterator for a list of SPARQL groups
 function SparqlGroupsIterator (source, groups, options) {
   // Chain iterators for each of the graphs in the group
-  var bgps = _.filter(groups,{'type':'bgp'})
-  if (bgps.length > 1) {
-    var firstBGP = _.findIndex(groups,{'type':'bgp'})
-    var allBGPs = {type:'bgp',triples:[]};
-    for (var i = 0; i < bgps.length; i++) {
-      var bgp = bgps[i]
-      allBGPs.triples = _.concat(allBGPs.triples,bgp.triples);
-    }
-    groups = _.filter(groups,function(o){return o.type != 'bgp';})
-    groups.splice(firstBGP,0,allBGPs);
-  }
+  // var bgps = _.filter(groups,{'type':'bgp'})
+  // var binds = _.filter(groups,{'type':'bind'})
+  // if (binds.length > 0 && bgps.length > 1) {
+  //
+  // }
+  // else if (bgps.length > 1) {
+  //   var firstBGP = _.findIndex(groups,{'type':'bgp'})
+  //   var allBGPs = {type:'bgp',triples:[]};
+  //   for (var i = 0; i < bgps.length; i++) {
+  //     var bgp = bgps[i]
+  //     allBGPs.triples = _.concat(allBGPs.triples,bgp.triples);
+  //   }
+  //   groups = _.filter(groups,function(o){return o.type != 'bgp';})
+  //   groups.splice(firstBGP,0,allBGPs);
+  // }
   groups.sort(function(a,b){
     if (a.type === b.type) {
       return 0;
@@ -311,7 +315,20 @@ function SparqlGroupsIterator (source, groups, options) {
       return 0;
     }
   })
-
+  var newGroups = []
+  var prec = null;
+  for (var i = 0; i < groups.length; i++) {
+    var group = groups[i];
+    if (group.type === "bgp" && prec != null && prec.type === "bgp") {
+      lastGroup = newGroups[newGroups.length - 1];
+      lastGroup.triples = _.concat(lastGroup.triples,group.triples);
+    }
+    else {
+      newGroups.push(group);
+    }
+    prec = groups[i];
+  }
+  groups = newGroups;
   if (groups[0].type === 'values') {
     var vals = groups[0].values;
     var bgpIndex = _.findIndex(groups,{'type':'bgp'})

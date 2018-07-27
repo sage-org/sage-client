@@ -66,7 +66,12 @@ class OperationOperator extends TransformIterator {
           var parsedB = utils.parseBinding("null",b);
           if (parsedA.datatype != "http://www.w3.org/2001/XMLSchema#string" && parsedB.datatype != "http://www.w3.org/2001/XMLSchema#string") {
             var res = Number(parsedA.value) + Number(parsedB.value);
-            return isNaN(res) ? null : res;
+            if (parsedA.datatype === parsedB.datatype) {
+              return isNaN(res) ? null : this['strdt']([res,parsedA.datatype,true]);
+            }
+            else {
+              return isNaN(res) ? null : res;
+            }
           }
           else {
             return null
