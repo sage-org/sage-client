@@ -80,7 +80,7 @@ function SparqlIterator (source, query, options, url) {
       for (var i = 0; i < query.group.length; i++) {
         var gb = query.group[i]
         if (gb.expression != null  && typeof gb.expression !== 'string' && gb.expression.type === "operation") {
-          graphIterator = new OperationOperator(graphIterator, gb, options)
+          graphIterator = new OperationOperator(graphIterator, gb, options,false)
           var tmpGB = {expression : gb.variable}
           graphIterator = new GroupByOperator(graphIterator, tmpGB, options)
         }
@@ -121,7 +121,7 @@ function SparqlIterator (source, query, options, url) {
         var variable = query.variables[i]
         if (variable.expression != null && typeof variable.expression !== 'string') {
           if (variable.expression.type === "operation") {
-            graphIterator = new OperationOperator(graphIterator, variable, options)
+            graphIterator = new OperationOperator(graphIterator, variable, options,false)
           }
           else if (variable.expression.type === "aggregate") {
             if (query.group) {
@@ -411,7 +411,7 @@ function SparqlGroupIterator (source, group, options) {
         return new SparqlGroupIterator(source.clone(), patternToken, childOptions)
       }))
     case 'bind':
-      return new OperationOperator(source, group, options)
+      return new OperationOperator(source, group, options,true)
     case 'filter':
     // A set of bindings does not match the filter
     // if it evaluates to 0/false, or errors

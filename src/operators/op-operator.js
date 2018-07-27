@@ -46,11 +46,12 @@ class OperationOperator extends TransformIterator {
    * @memberof Operators
    * @param {AsyncIterator} source - The source operator
    */
-  constructor (source, variable,options) {
+  constructor (source, variable,options,bind) {
     super(source)
     this._variable = variable.variable
     this._expression = variable.expression
     this._options = options;
+    this._bind = bind;
     var that = this;
     this._currentItem = null;
     if (this._options.bnode_count == null) {
@@ -697,6 +698,15 @@ class OperationOperator extends TransformIterator {
           }
         }
       },
+
+      'select': function(args) {
+        try {
+          return args[0];
+        } catch (e) {
+          return null;
+        }
+      },
+
     };
   }
 
@@ -710,8 +720,20 @@ class OperationOperator extends TransformIterator {
   _transform (item, done) {
     this._currentItem = item;
     var value = this.applyOperator(item,this._expression);
-    if (value != null) {
-      item[this._variable] = value.toString()
+    if (this._bind) {
+        if (item[this._variable] != null) {
+          item[this._variable] = null
+        }
+        else {
+          if (value != null) {
+            item[this._variable] = value.toString()
+          }
+        }
+    }
+    else {
+      if (value != null) {
+        item[this._variable] = value.toString()
+      }
     }
     this._push(item);
     done()
@@ -719,7 +741,8 @@ class OperationOperator extends TransformIterator {
 
   applyOperator(item,expression){
     var expr = _.cloneDeep(expression);
-    var args = expr.args;
+    var operator = expr.operator || "select";
+    var args = expr.args || [expr] || [];
     for (var i = 0; i < args.length; i++) {
       if (typeof args[i] === "object" && !Array.isArray(args[i])) {
         args[i] = this.applyOperator(item,args[i])
@@ -733,12 +756,12 @@ class OperationOperator extends TransformIterator {
         }
       }
     }
-    var func = this._operators[expr.operator];
+    var func = this._operators[operator];
     if (func != null) {
-      return this._operators[expr.operator](args);
+      return this._operators[operator](args);
     }
     else {
-      throw new Error("Operation not implemented : " + expr.operator)
+      throw new Error("Operation not implemented : " + operator)
     }
   }
 
