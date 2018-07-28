@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "standard --fix",
     "test": "jest --notify",
+    "doc": "docma -c ./docma.json",
     "build": "browserify sage-client.js -s sage -o sage-client-browser.js"
   },
   "repository": {
