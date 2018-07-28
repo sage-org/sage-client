@@ -4,15 +4,17 @@ node_js:
 notifications:
   email: false
 script:
-- npm run doc
 - npm run lint
 - npm run test
 after_success:
 - npm run report
 - node_modules/codecov/bin/codecov -t $CODECOV_TOKEN
-before_deploy: npm run doc
+before_deploy:
+- npm run doc
+- npm run build
 deploy:
 - provider: npm
+  skip_cleanup: true
   email: tminier01@gmail.com
   api_key: $NPM_KEY
   on:
