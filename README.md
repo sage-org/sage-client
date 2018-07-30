@@ -1,4 +1,6 @@
 # sage-client
+[![Build Status](https://travis-ci.org/sage-org/sage-client.svg?branch=master)](https://travis-ci.org/sage-org/sage-client)
+
 JS client for the SaGe query engine
 
 # Installation
