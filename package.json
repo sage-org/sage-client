@@ -2,29 +2,34 @@
   "name": "sage-client",
   "version": "1.0.1",
   "description": "Javascript client for SaGe interfaces",
-  "main": "src/client.js",
+  "main": "./sage-client.js",
+  "bin": {
+    "sage-client": "bin/sage-client.js"
+  },
   "scripts": {
-    "lint": "standard --fix",
+    "lint": "standard",
     "test": "mocha tests/**/*-test.js",
-    "doc": "docma -c ./docma.json",
     "build": "browserify sage-client.js -s sage -o sage-client-browser.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Callidon/sage-client.git"
+    "url": "git+https://github.com/sage-org/sage-client.git"
   },
   "keywords": [
     "sage",
-    "query engine",
     "SPARQL query",
-    "preemptive SPARQL query execution"
+    "SPARQL query engine"
   ],
-  "author": "Thomas Minier <thomas.minier@univ-nantes.fr>",
+  "author": "Thomas Minier <thomas.minier@univ-nantes.fr> (https://callidon.github.io/)",
+  "contributors": [
+    "Corentin Marionneau <corentin.marionneau@gmail.com> (https://github.com/Slaanaroth)",
+    "Merlin Barzilai (https://github.com/Rintarou)"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Callidon/sage-client/issues"
+    "url": "https://github.com/sage-org/sage-client/issues"
   },
-  "homepage": "https://github.com/Callidon/sage-client#readme",
+  "homepage": "https://github.com/sage-org/sage-client#readme",
   "dependencies": {
     "asynciterator": "^1.1.1",
     "commander": "^2.15.1",
