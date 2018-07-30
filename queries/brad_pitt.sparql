@@ -1,0 +1,10 @@
+prefix dbo: <http://dbpedia.org/ontology/>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?movie ?title ?name WHERE {
+?movie dbo:starring [ rdfs:label 'Brad Pitt'@en ];
+rdfs:label ?title;
+dbo:director [ rdfs:label ?name ].
+FILTER LANGMATCHES(LANG(?title), 'EN')
+FILTER LANGMATCHES(LANG(?name),  'EN')
+}

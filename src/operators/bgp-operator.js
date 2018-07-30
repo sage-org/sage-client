@@ -33,7 +33,7 @@ class BGPOperator extends MultiTransformIterator {
   constructor (source, bgp, options) {
     super(source, options)
     this._bgp = bgp
-    this._options = options;
+    this._options = options
     this._sageClient = options.client
   }
 
@@ -41,7 +41,7 @@ class BGPOperator extends MultiTransformIterator {
     const boundedBGP = this._bgp.map(p => rdf.applyBindings(bindings, p))
     const hasVars = boundedBGP.map(p => some(p, v => v.startsWith('?')))
       .reduce((acc, v) => acc && v, true)
-    return new SageOperator(boundedBGP, this._sageClient,this._options)
+    return new SageOperator(boundedBGP, this._sageClient, this._options)
       .map(item => {
         if (size(item) === 0 && hasVars) return null
         return assign(item, bindings)

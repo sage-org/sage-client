@@ -26,7 +26,6 @@ SOFTWARE.
 
 const { TransformIterator } = require('asynciterator')
 const _ = require('lodash')
-const map = require('lodash/map')
 const utils = require('../formatters/utils')
 
 /**
@@ -45,7 +44,7 @@ class AggrOperator extends TransformIterator {
   constructor (source, variable) {
     super(source)
     this._variable = variable
-    source.on('error', err => console.error())
+    source.on('error', err => this.emit('error', err))
   }
 
   /**
@@ -112,16 +111,16 @@ class AggrOperator extends TransformIterator {
     } else {
       if (dist) {
         var hash = {}
-        for (var i = 0; i < item.group.length; i++) {
-          var bindings = item.group[i]
+        for (let i = 0; i < item.group.length; i++) {
+          let bindings = item.group[i]
           if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
             hash[bindings[aggVar]] = true
             count += 1
           }
         }
       } else {
-        for (var i = 0; i < item.group.length; i++) {
-          var bindings = item.group[i]
+        for (let i = 0; i < item.group.length; i++) {
+          let bindings = item.group[i]
           if (bindings[aggVar] != null) {
             count += 1
           }
@@ -142,7 +141,7 @@ class AggrOperator extends TransformIterator {
       var hash = {}
       for (var i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+        var val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null && hash[val] == null) {
           if (isNaN(val)) {
             notNumbers = true
@@ -153,9 +152,9 @@ class AggrOperator extends TransformIterator {
         }
       }
     } else {
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
+        let val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null) {
           if (isNaN(val)) {
             notNumbers = true
@@ -169,7 +168,7 @@ class AggrOperator extends TransformIterator {
       item[alias] = 'null'
     } else {
       var sum = _.sum(vals)
-      item[alias] = (Math.round(sum * 100) / 100).toString();
+      item[alias] = (Math.round(sum * 100) / 100).toString()
     }
     return item
   }
@@ -183,28 +182,28 @@ class AggrOperator extends TransformIterator {
     var notNumbers = false
     if (dist) {
       var hash = {}
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
+        let val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null && hash[val] == null) {
           if (isNaN(val)) {
             notNumbers = true
           } else {
             hash[val] = true
-            valMap[Number(val)] = val;
+            valMap[Number(val)] = val
             vals.push(Number(val))
           }
         }
       }
     } else {
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
+        let val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null) {
           if (isNaN(val)) {
             notNumbers = true
           } else {
-            valMap[Number(val)] = val;
+            valMap[Number(val)] = val
             vals.push(Number(val))
           }
         }
@@ -227,28 +226,28 @@ class AggrOperator extends TransformIterator {
     var notNumbers = false
     if (dist) {
       var hash = {}
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
+        let val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null && hash[val] == null) {
           if (isNaN(val)) {
             notNumbers = true
           } else {
             hash[val] = true
-            valMap[Number(val)] = val;
+            valMap[Number(val)] = val
             vals.push(Number(val))
           }
         }
       }
     } else {
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
+        let val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null) {
           if (isNaN(val)) {
             notNumbers = true
           } else {
-            valMap[Number(val)] = val;
+            valMap[Number(val)] = val
             vals.push(Number(val))
           }
         }
@@ -270,9 +269,9 @@ class AggrOperator extends TransformIterator {
     var notNumbers = false
     if (dist) {
       var hash = {}
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
+        let val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null && hash[val] == null) {
           if (val.startsWith('"') || val.startsWith("'")) {
             val = val.slice(1, -1)
@@ -286,9 +285,9 @@ class AggrOperator extends TransformIterator {
         }
       }
     } else {
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
-        var val = utils.parseBinding(aggVar,bindings[aggVar]).value;
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
+        let val = utils.parseBinding(aggVar, bindings[aggVar]).value
         if (val != null) {
           if (val.startsWith('"') || val.startsWith("'")) {
             val = val.slice(1, -1)
@@ -304,8 +303,8 @@ class AggrOperator extends TransformIterator {
     if (notNumbers) {
       item[alias] = 'null'
     } else {
-      var average = _.mean(vals);
-      item[alias] = (Math.round(average * 100) / 100).toString();
+      var average = _.mean(vals)
+      item[alias] = (Math.round(average * 100) / 100).toString()
     }
     return item
   }
@@ -314,28 +313,27 @@ class AggrOperator extends TransformIterator {
     var aggVar = this._variable.expression.expression
     var alias = this._variable.variable
     var dist = this._variable.expression.distinct
-    var vals = []
     if (dist) {
       var hash = {}
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
         if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
           hash[bindings[aggVar]] = true
         }
       }
-      var valueSet = []
-      for (var val in hash) {
+      let valueSet = []
+      for (let val in hash) {
         valueSet.push(val)
       }
       var rand = Math.floor(Math.random() * Math.floor(valueSet.length))
       item[alias] = valueSet[rand]
     } else {
-      var valueSet = []
-      for (var i = 0; i < item.group.length; i++) {
+      let valueSet = []
+      for (let i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
         valueSet.push(bindings[aggVar])
       }
-      var rand = Math.floor(Math.random() * Math.floor(valueSet.length))
+      let rand = Math.floor(Math.random() * Math.floor(valueSet.length))
       item[alias] = valueSet[rand]
     }
 
@@ -347,24 +345,22 @@ class AggrOperator extends TransformIterator {
     var alias = this._variable.variable
     var dist = this._variable.expression.distinct
     var sep = this._variable.expression.separator
-
-    var vals = []
     if (dist) {
       var hash = {}
-      for (var i = 0; i < item.group.length; i++) {
-        var bindings = item.group[i]
+      for (let i = 0; i < item.group.length; i++) {
+        let bindings = item.group[i]
         if (bindings[aggVar] != null && hash[bindings[aggVar]] == null) {
           hash[bindings[aggVar]] = true
         }
       }
-      var valueSet = []
-      for (var val in hash) {
+      let valueSet = []
+      for (let val in hash) {
         valueSet.push(val)
       }
       item[alias] = valueSet.join(sep)
     } else {
-      var valueSet = []
-      for (var i = 0; i < item.group.length; i++) {
+      let valueSet = []
+      for (let i = 0; i < item.group.length; i++) {
         var bindings = item.group[i]
         valueSet.push(JSON.parse(bindings[aggVar]))
       }

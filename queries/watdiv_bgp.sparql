@@ -1,5 +1,0 @@
-SELECT * WHERE {
-  ?v0 <http://schema.org/eligibleRegion> <http://db.uwaterloo.ca/~galuc/wsdbm/Country9> .
-  ?v0 <http://purl.org/goodrelations/includes> ?v1 .
-  ?v1 <http://schema.org/contentSize> ?v2 .
-}

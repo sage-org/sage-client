@@ -29,12 +29,9 @@ const fs = require('fs')
 const program = require('commander')
 // const SageClient = require('../src/client.js')
 const SparqlIterator = require('../src/sparql-iterator.js')
-const SageClient = require('../src/utils/sage-request-client.js')
 const Spy = require('../src/engine/spy.js')
 const JSONFormatter = require('../src/formatters/json-formatter.js')
 const XMLFormatter = require('../src/formatters/xml-formatter.js')
-const SparqlXMLResultWriter = require('ldf-client/lib/writers/SparqlXMLResultWriter')
-const SparqlJSONResultWriter = require('ldf-client/lib/writers/SparqlJSONResultWriter')
 
 const mimetypes = {
   'application/json': JSONFormatter,
@@ -66,7 +63,6 @@ const spy = new Spy()
 
 // fetch SPARQL query to execute
 let query = null
-// let timeout = null
 if (program.query) {
   query = program.query
 } else if (program.file && fs.existsSync(program.file)) {
@@ -75,7 +71,7 @@ if (program.query) {
   process.stderr.write('Error: you must specify a SPARQL query to execute.\nSee ./bin/sage-client.js --help for more details.\n')
   process.exit(1)
 }
-var iterator = new mimetypes[program.type](new SparqlIterator(query, {spy: spy},server));
+var iterator = new mimetypes[program.type](new SparqlIterator(query, {spy: spy}, server))
 
 iterator.on('error', error => {
   process.stderr.write('ERROR: An error occurred during query execution.\n')
@@ -84,17 +80,10 @@ iterator.on('error', error => {
 
 iterator.on('end', () => {
   const endTime = Date.now()
-  // clearTimeout(timeout)
   const time = endTime - startTime
   process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s)\n`)
 })
 const startTime = Date.now()
 iterator.on('data', data => {
-  process.stdout.write(data);
+  process.stdout.write(data)
 })
-
-// set query timeout
-// timeout = setTimeout(() => {
-//   iterator.close()
-//   process.stderr.write(`TIMEOUT EXCEEDED (${program.timeout}ms) - shutting down query processing...\n`)
-// }, program.timeout)

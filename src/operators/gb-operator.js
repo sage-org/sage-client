@@ -25,7 +25,6 @@ SOFTWARE.
 'use strict'
 
 const { BufferedIterator } = require('asynciterator')
-const map = require('lodash/map')
 
 /**
  * GroupByOperator applies a GROUPBY aggregation on the output of another operator.

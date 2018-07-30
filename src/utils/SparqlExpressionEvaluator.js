@@ -45,17 +45,18 @@ evaluators = {
   // Does nothing
   null: function () { return noop },
 
-  object: function(expr) { return function () { return expr.map(function(elem){return utils.parseBinding("null",elem).value}) }  },
+  object: function (expr) { return function () { return expr.map(function (elem) { return utils.parseBinding('null', elem).value }) } },
 
   // Evaluates an IRI, literal, or variable
   string: function (expression) {
     // Evaluate a IRIs or literal to its own value
     if (expression[0] !== '?') { return function () { return expression } }
     // Evaluate a variable to its value
-    else { return function (bindings) {
-        return bindings && bindings[expression];
+    else {
+      return function (bindings) {
+        return bindings && bindings[expression]
+      }
     }
-  }
   },
 
   // Evaluates an operation
@@ -122,53 +123,53 @@ evaluators.functionCall = evaluators.operation
 // Operators for each of the operator types
 operators = {
   '+': function (a, b) {
-    a = Number(utils.parseBinding("null",a).value);
-    b = Number(utils.parseBinding("null",b).value);
+    a = Number(utils.parseBinding('null', a).value)
+    b = Number(utils.parseBinding('null', b).value)
     return a > b
   },
   '-': function (a, b) {
-    a = Number(utils.parseBinding("null",a).value);
-    b = Number(utils.parseBinding("null",b).value);
+    a = Number(utils.parseBinding('null', a).value)
+    b = Number(utils.parseBinding('null', b).value)
     return a - b
   },
   '*': function (a, b) {
-    a = Number(utils.parseBinding("null",a).value);
-    b = Number(utils.parseBinding("null",b).value);
+    a = Number(utils.parseBinding('null', a).value)
+    b = Number(utils.parseBinding('null', b).value)
     return a * b
   },
   '/': function (a, b) {
-    a = Number(utils.parseBinding("null",a).value);
-    b = Number(utils.parseBinding("null",b).value);
+    a = Number(utils.parseBinding('null', a).value)
+    b = Number(utils.parseBinding('null', b).value)
     return a / b
   },
   '=': function (a, b) {
-    a = utils.parseBinding("null",a).value;
-    b = utils.parseBinding("null",b).value;
+    a = utils.parseBinding('null', a).value
+    b = utils.parseBinding('null', b).value
     return a == b
   },
   '!=': function (a, b) {
-    a = utils.parseBinding("null",a).value;
-    b = utils.parseBinding("null",b).value;
+    a = utils.parseBinding('null', a).value
+    b = utils.parseBinding('null', b).value
     return a != b
   },
   '<': function (a, b) {
-    a = utils.parseBinding("null",a).value;
-    b = utils.parseBinding("null",b).value;
+    a = utils.parseBinding('null', a).value
+    b = utils.parseBinding('null', b).value
     return a < b
   },
   '<=': function (a, b) {
-    a = utils.parseBinding("null",a).value;
-    b = utils.parseBinding("null",b).value;
+    a = utils.parseBinding('null', a).value
+    b = utils.parseBinding('null', b).value
     return a <= b
   },
   '>': function (a, b) {
-    a = utils.parseBinding("null",a).value;
-    b = utils.parseBinding("null",b).value;
+    a = utils.parseBinding('null', a).value
+    b = utils.parseBinding('null', b).value
     return a > b
   },
   '>=': function (a, b) {
-    a = utils.parseBinding("null",a).value;
-    b = utils.parseBinding("null",b).value;
+    a = utils.parseBinding('null', a).value
+    b = utils.parseBinding('null', b).value
     return a >= b
   },
   '!': function (a) { return !a },
@@ -179,25 +180,25 @@ operators = {
   },
   'langmatches': function (langTag, langRange) {
     // Implements https://tools.ietf.org/html/rfc4647#section-3.3.1
-    langTag = langTag.toLowerCase().replace(/^"(.*)"$/, '$1');
-    langRange = langRange.toLowerCase().replace(/^"(.*)"$/, '$1');
+    langTag = langTag.toLowerCase().replace(/^"(.*)"$/, '$1')
+    langRange = langRange.toLowerCase().replace(/^"(.*)"$/, '$1')
     return langTag === langRange ||
            (langRange = literalValue(langRange)) === '*' ||
            langTag.substr(1, langRange.length + 1) === langRange + '-'
   },
   'contains': function (string, substring) {
-    var a = String(utils.parseBinding("null",string).value),
-      b = String(utils.parseBinding("null",substring).value);
+    var a = String(utils.parseBinding('null', string).value),
+      b = String(utils.parseBinding('null', substring).value)
     return a.indexOf(b) >= 0
   },
   'strstarts': function (string, substring) {
-    var a = String(utils.parseBinding("null",string).value),
-      b = String(utils.parseBinding("null",substring).value);
+    var a = String(utils.parseBinding('null', string).value),
+      b = String(utils.parseBinding('null', substring).value)
     return a.startsWith(b)
   },
   'strends': function (string, substring) {
-    var a = String(utils.parseBinding("null",string).value),
-      b = String(utils.parseBinding("null",substring).value);
+    var a = String(utils.parseBinding('null', string).value),
+      b = String(utils.parseBinding('null', substring).value)
     return a.endsWith(b)
   },
   'regex': function (subject, pattern) {
@@ -232,49 +233,48 @@ operators = {
   },
 
   'isnumeric': function (a) {
-    a = utils.parseBinding("null",a).value;
-    return !isNaN(a);
+    a = utils.parseBinding('null', a).value
+    return !isNaN(a)
   },
 
   'abs': function (a) {
-    return Math.abs(a);
+    return Math.abs(a)
   },
 
   'ceil': function (a) {
-    return Math.ceil(a);
+    return Math.ceil(a)
   },
 
   'floor': function (a) {
-    return Math.floor(a);
+    return Math.floor(a)
   },
 
   'round': function (a) {
-    return Math.round(a);
+    return Math.round(a)
   },
 
   'sameterm': function (a, b) {
-    a = utils.parseBinding("null",a).value;
-    b = utils.parseBinding("null",b).value;
+    a = utils.parseBinding('null', a).value
+    b = utils.parseBinding('null', b).value
     return a === b
   },
 
   'in': function (a, b) {
-    a = utils.parseBinding("null",a).value,
-      b = b.map(function(elem){return utils.parseBinding("null",elem).value});
-    return b.includes(a);
+    a = utils.parseBinding('null', a).value,
+    b = b.map(function (elem) { return utils.parseBinding('null', elem).value })
+    return b.includes(a)
   },
 
   'notin': function (a, b) {
-    a = utils.parseBinding("null",a).value,
-      b = b.map(function(elem){return utils.parseBinding("null",elem).value});
-    return !b.includes(a);
+    a = utils.parseBinding('null', a).value,
+    b = b.map(function (elem) { return utils.parseBinding('null', elem).value })
+    return !b.includes(a)
   },
 
   'datatype': function (a) {
-    return utils.parseBinding("null",a).datatype;
-  },
+    return utils.parseBinding('null', a).datatype
+  }
 };
-
 
 // Tag all operators that expect their arguments to be boolean
 [
@@ -293,7 +293,7 @@ operators = {
 // Tag all operators that have boolean results
 [
   '!', '&&', '||', '=', '!=', '<', '<=', '>', '>=',
-  'langmatches', 'contains', 'strstarts', 'strends', 'regex', 'isiri', 'isblank', 'isliteral','isnumeric' , 'sameterm','in','notin'
+  'langmatches', 'contains', 'strstarts', 'strends', 'regex', 'isiri', 'isblank', 'isliteral', 'isnumeric', 'sameterm', 'in', 'notin'
 ].forEach(function (operatorName) {
   operators[operatorName].resultType = 'boolean'
 })

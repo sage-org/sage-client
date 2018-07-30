@@ -4,11 +4,7 @@ node_js:
 notifications:
   email: false
 script:
-- npm run lint
 - npm run test
-after_success:
-- npm run report
-- node_modules/codecov/bin/codecov -t $CODECOV_TOKEN
 before_deploy:
 - npm run doc
 - npm run build

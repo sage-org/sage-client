@@ -46,10 +46,10 @@ class SageRequestClient {
       })
   }
 
-  query (type,bgp, next = null) {
-    var queryBody;
+  query (type, bgp, next = null) {
+    var queryBody
     switch (type) {
-      case "bgp":
+      case 'bgp':
         queryBody = {
           query: {
             type: 'bgp',
@@ -57,18 +57,18 @@ class SageRequestClient {
           },
           next
         }
-        break;
-      case "union":
+        break
+      case 'union':
         queryBody = {
           query: {
             type: 'union',
-            union:bgp
+            union: bgp
           },
           next
         }
-        break;
+        break
       default:
-      console.error("Unknown sage query type")
+        console.error('Unknown sage query type')
     }
 
     return new Promise((resolve, reject) => {

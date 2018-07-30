@@ -41,26 +41,25 @@ class SageOperator extends BufferedIterator {
    * @param {Object[]} optionals  - Optional BGPs to evaluate
    * @param {Object[]} filters  - Set of filters to evaluate
    */
-  constructor (bgp, sageClient,options, optionals = [], filters = []) {
+  constructor (bgp, sageClient, options, optionals = [], filters = []) {
     super()
-    this._options = options;
+    this._options = options
     for (var i = 0; i < bgp.length; i++) {
       var tp = bgp[i]
       for (var variable in tp) {
         if (tp[variable].startsWith('_:')) {
-          var newVar = '?' + tp[variable].slice(2);
-          tp[variable] = newVar;
+          var newVar = '?' + tp[variable].slice(2)
+          tp[variable] = newVar
           if (this._options.artificials != null) {
-            this._options.artificials.push(newVar);
-          }
-          else {
+            this._options.artificials.push(newVar)
+          } else {
             this._options.artificials = []
-            this._options.artificials.push(newVar);
+            this._options.artificials.push(newVar)
           }
         }
       }
     }
-    this._bgp = bgp;
+    this._bgp = bgp
     this._optionals = optionals
     this._filters = filters
     this._next = null
@@ -86,7 +85,7 @@ class SageOperator extends BufferedIterator {
     if (count <= 0) {
       done()
     } else {
-      this._sageClient.query("bgp",this._bgp, this._next)
+      this._sageClient.query('bgp', this._bgp, this._next)
         .then(body => {
           this._bufferedValues = body.bindings.slice(0)
           if (body.next) {

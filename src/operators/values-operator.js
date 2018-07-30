@@ -26,7 +26,6 @@ SOFTWARE.
 
 const { TransformIterator } = require('asynciterator')
 
-
 /**
  * @extends TransformIterator
  * @memberof Operators
@@ -39,7 +38,7 @@ class ValuesOperator extends TransformIterator {
    * @param {AsyncIterator} source - The source iterator
    * @param {string[]} variables - The variables of the values
    */
-  constructor (source, variables,options) {
+  constructor (source, variables, options) {
     super(source)
     this._variables = variables
     this._options = options
@@ -56,7 +55,7 @@ class ValuesOperator extends TransformIterator {
     for (var variable in this._variables) {
       mappings[variable] = this._variables[variable]
     }
-    this._push(mappings);
+    this._push(mappings)
     done()
   }
 }
