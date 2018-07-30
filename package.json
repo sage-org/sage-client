@@ -5,7 +5,7 @@
   "main": "src/client.js",
   "scripts": {
     "lint": "standard --fix",
-    "test": "jest --notify",
+    "test": "mocha tests/**/*-test.js",
     "doc": "docma -c ./docma.json",
     "build": "browserify sage-client.js -s sage -o sage-client-browser.js"
   },
@@ -44,11 +44,8 @@
   "standard": {
     "env": [
       "node",
-      "jest"
+      "mocha",
+      "chai"
     ]
-  },
-  "jest": {
-    "verbose": true,
-    "testRegex": "tests/.*-test\\.js$"
   }
 }

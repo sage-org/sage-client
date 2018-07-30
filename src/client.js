@@ -63,7 +63,7 @@ class SageClient {
    */
   execute (query, spy = null) {
     if (isNull(spy)) {
-      return new SparqlIterator(query, this._url)
+      return new SparqlIterator(query, {}, this._url)
     }
     return new SparqlIterator(query, {spy: spy}, this._url)
   }
