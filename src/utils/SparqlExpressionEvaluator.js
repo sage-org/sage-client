@@ -301,11 +301,11 @@ operators = {
 // Tag all operators that take expressions instead of evaluated expressions
 operators.bound.acceptsExpressions = true
 
-isIRI = function (a) {
+function isIRI (a) {
   return a.startsWith('http://') || a.startsWith('https://')
 }
 
-isBlank = function (a) {
+function isBlank (a) {
   return a.startsWith('_:')
 }
 

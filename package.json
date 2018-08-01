@@ -2,14 +2,14 @@
   "name": "sage-client",
   "version": "1.0.1",
   "description": "Javascript client for SaGe interfaces",
-  "main": "./sage-client.js",
+  "main": "./src/sage-client.js",
   "bin": {
     "sage-client": "bin/sage-client.js"
   },
   "scripts": {
     "lint": "standard",
     "test": "mocha tests/**/*-test.js",
-    "build": "browserify sage-client.js -s sage -o sage-client-browser.js"
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -41,10 +41,15 @@
     "sparqljs": "^2.0.3"
   },
   "devDependencies": {
-    "browserify": "^16.2.2",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
+    "babel-preset-env": "^1.7.0",
     "chai": "^4.1.2",
     "mocha": "^5.2.0",
-    "standard": "^11.0.1"
+    "standard": "^11.0.1",
+    "uglifyjs-webpack-plugin": "^1.2.7",
+    "webpack": "^4.16.3",
+    "webpack-cli": "^3.1.0"
   },
   "standard": {
     "env": [

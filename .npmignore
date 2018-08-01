@@ -5,7 +5,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 docs/
-dist/
+tests/
+queries/
+
+webpack.config.js
+docma.json
+.travis.yml
 
 # Runtime data
 pids
