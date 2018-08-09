@@ -24,7 +24,7 @@ SOFTWARE.
 
 'use strict'
 
-const SparqlParser = require('sparqljs').Parser
+const { Parser } = require('sparqljs')
 const AsyncIterator = require('asynciterator')
 const BGPOperator = require('../operators/bgp-operator.js')
 const ValuesOperator = require('../operators/values-operator.js')
@@ -79,8 +79,9 @@ function replaceValues (bgp, val) {
  * @author Corentin Marionneau
  */
 class PlanBuilder {
-  constructor () {
+  constructor (prefixes = {}) {
     this._dispatcher = null
+    this._parser = new Parser(prefixes)
   }
 
   build (query, url, options = {}, source = null) {
@@ -101,139 +102,90 @@ class PlanBuilder {
       options.client = options.servers[url]
     }
 
-    try {
-      // Parse the query if needed
-      if (typeof query === 'string') { query = new SparqlParser(options.prefixes).parse(query) }
-      options.prefixes = query.prefixes
-      // Create an iterator that projects the bindings according to the query type
-      if (query.base != null) {
-        options.base = query.base
-      }
-      // Create an iterator for bindings of the query's graph pattern
-      let graphIterator
-      if (query.patterns != null || (query.where != null && query.where.length > 0)) {
-        graphIterator = this._buildWhere(source,
-          query.patterns || query.where, options)
-      } else {
-        graphIterator = new AsyncIterator.SingletonIterator({})
-      }
+    // Parse the query into a logical query execution plan
+    query = new Parser(options.prefixes).parse(query)
+    options.prefixes = query.prefixes
 
-      if (query.group) {
-        for (let i = 0; i < query.group.length; i++) {
-          var gb = query.group[i]
-          if (gb.expression != null && typeof gb.expression !== 'string' && gb.expression.type === 'operation') {
-            graphIterator = new OperationOperator(graphIterator, gb, options, false)
-            var tmpGB = {expression: gb.variable}
-            graphIterator = new GroupByOperator(graphIterator, tmpGB, options)
-          } else {
-            graphIterator = new GroupByOperator(graphIterator, gb, options)
-          }
-        }
-      }
-
-      if (query.having != null) {
-        for (let i = 0; i < query.having.length; i++) {
-          var hav = query.having[i]
-          for (var j = 0; j < hav.args.length; j++) {
-            if (typeof hav.args[j] !== 'string') {
-              var newVar = '?tmp_' + Math.random().toString(36).substring(8)
-              if (options.artificials == null) {
-                options.artificials = []
-              }
-              options.artificials.push(newVar)
-              var aggrVar = {variable: newVar, expression: hav.args[j]}
-              if (query.group) {
-                graphIterator = new AggrOperator(graphIterator, aggrVar)
-              } else {
-                query.group = 'placeholder'
-                graphIterator = new GroupByOperator(graphIterator, '*', options)
-                graphIterator = new AggrOperator(graphIterator, aggrVar)
-              }
-              hav.args[j] = newVar
-            }
-          }
-          var filter = {type: 'filter', expression: hav}
-          graphIterator = this._buildGroup(graphIterator, filter, options)
-        }
-      }
-
-      if (query.variables != null) {
-        for (let i = 0; i < query.variables.length; i++) {
-          var variable = query.variables[i]
-          if (variable.expression != null && typeof variable.expression !== 'string') {
-            if (variable.expression.type === 'operation') {
-              graphIterator = new OperationOperator(graphIterator, variable, options, false)
-            } else if (variable.expression.type === 'aggregate') {
-              if (query.group) {
-                graphIterator = new AggrOperator(graphIterator, variable)
-              } else {
-                graphIterator = new GroupByOperator(graphIterator, '*', options)
-                graphIterator = new AggrOperator(graphIterator, variable)
-              }
-            } else {
-              throw new Error('Unknown variable type : ' + variable.expression.type)
-            }
-          }
-        }
-      }
-
-      // Create iterators for each order
-      for (let i = query.order && (query.order.length - 1); i >= 0; i--) {
-        let order = new SparqlExpressionEvaluator(query.order[i].expression)
-        let ascending = !query.order[i].descending
-        graphIterator = new SortIterator(graphIterator, (a, b) => {
-          let orderA = ''
-          let orderB = ''
-          try { orderA = order(a) } catch (error) { /* ignore order error */ }
-          try { orderB = order(b) } catch (error) { /* ignore order error */ }
-          if (!isNaN(orderA)) {
-            orderA = Number(orderA)
-          }
-          if (!isNaN(orderB)) {
-            orderB = Number(orderB)
-          }
-          if (orderA < orderB) return ascending ? -1 : 1
-          if (orderA > orderB) return ascending ? 1 : -1
-          return 0
-        }, options)
-      }
-
-      let queryIterator
-      let QueryConstructor = queryConstructors[query.queryType]
-      if (!QueryConstructor) { throw new Error('No iterator available for query type: ' + query.queryType) }
-      queryIterator = new QueryConstructor(graphIterator, query, options)
-      if (query.values != null) {
-        query.where.push({type: 'values', values: query.values})
-      }
-
-      // Create iterators for modifiers
-      if (query.distinct) { queryIterator = new DistinctIterator(queryIterator, options) }
-      // Add offsets and limits if requested
-      if ('offset' in query || 'limit' in query) { queryIterator = queryIterator.transform({ offset: query.offset, limit: query.limit }) }
-      queryIterator.queryType = query.queryType
-      return queryIterator
-    } catch (error) {
-      console.error(error)
+    // Handle VALUES
+    if (query.values != null) {
+      query.where.push({type: 'values', values: query.values})
     }
+
+    // Create an iterator that projects the bindings according to the query type
+    if (query.base != null) {
+      options.base = query.base
+    }
+
+    // Handles WHERE clause
+    let graphIterator
+    if (query.patterns != null || (query.where != null && query.where.length > 0)) {
+      graphIterator = this._buildWhere(source,
+        query.patterns || query.where, options)
+    } else {
+      graphIterator = new AsyncIterator.SingletonIterator({})
+    }
+
+    // Handles GROUP BY
+    if (query.group) {
+      graphIterator = this._buildGroupBy(graphIterator, query.group, options)
+    }
+
+    // Handles HAVING
+    if (query.having != null) {
+      graphIterator = this._buildHaving(graphIterator, query, options)
+    }
+
+    if (query.variables != null) {
+      for (let i = 0; i < query.variables.length; i++) {
+        var variable = query.variables[i]
+        if (variable.expression != null && typeof variable.expression !== 'string') {
+          if (variable.expression.type === 'operation') {
+            graphIterator = new OperationOperator(graphIterator, variable, options, false)
+          } else if (variable.expression.type === 'aggregate') {
+            if (query.group) {
+              graphIterator = new AggrOperator(graphIterator, variable)
+            } else {
+              graphIterator = new GroupByOperator(graphIterator, '*', options)
+              graphIterator = new AggrOperator(graphIterator, variable)
+            }
+          } else {
+            throw new Error('Unknown variable type : ' + variable.expression.type)
+          }
+        }
+      }
+    }
+
+    // Handles ORDER BY
+    graphIterator = this._buildOrderBy(graphIterator, query.order, options)
+
+    if (!(query.queryType in queryConstructors)) {
+      throw new Error(`Unsupported SPARQL query type: ${query.queryType}`)
+    }
+    graphIterator = new queryConstructors[query.queryType](graphIterator, query, options)
+
+    // Create iterators for modifiers
+    if (query.distinct) {
+      graphIterator = new DistinctIterator(graphIterator, options)
+    }
+    // Add offsets and limits if requested
+    if ('offset' in query || 'limit' in query) {
+      graphIterator = graphIterator.transform({
+        offset: query.offset,
+        limit: query.limit
+      })
+    }
+    graphIterator.queryType = query.queryType
+    return graphIterator
   }
 
+  /**
+   * Optimize a WHERE clause and build the correspoding physical plan
+   * @param  {[type]} source  [description]
+   * @param  {[type]} groups  [description]
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
   _buildWhere (source, groups, options) {
-    // Chain iterators for each of the graphs in the group
-    // var bgps = _.filter(groups,{'type':'bgp'})
-    // var binds = _.filter(groups,{'type':'bind'})
-    // if (binds.length > 0 && bgps.length > 1) {
-    //
-    // }
-    // else if (bgps.length > 1) {
-    //   var firstBGP = _.findIndex(groups,{'type':'bgp'})
-    //   var allBGPs = {type:'bgp',triples:[]};
-    //   for (let i = 0; i < bgps.length; i++) {
-    //     var bgp = bgps[i]
-    //     allBGPs.triples = _.concat(allBGPs.triples,bgp.triples);
-    //   }
-    //   groups = _.filter(groups,function(o){return o.type != 'bgp';})
-    //   groups.splice(firstBGP,0,allBGPs);
-    // }
     groups.sort(function (a, b) {
       if (a.type === b.type) {
         return 0
@@ -285,7 +237,7 @@ class PlanBuilder {
   }
 
   /**
-   * Build a physical plan for a SPARQL group
+   * Build a physical plan for a SPARQL group clause
    * @param  {[type]} source  [description]
    * @param  {[type]} group   [description]
    * @param  {[type]} options [description]
@@ -367,6 +319,94 @@ class PlanBuilder {
       default:
         throw new Error('Unsupported group type: ' + group.type)
     }
+  }
+
+  /**
+   * Build a physical plan for a SPARQL GROUP BY clause
+   * @param  {[type]} source  [description]
+   * @param  {[type]} group   [description]
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
+  _buildGroupBy (source, group, options) {
+    let iterator = source
+    for (let i = 0; i < group.length; i++) {
+      var gb = group[i]
+      if (gb.expression != null && typeof gb.expression !== 'string' && gb.expression.type === 'operation') {
+        iterator = new OperationOperator(iterator, gb, options, false)
+        var tmpGB = {expression: gb.variable}
+        iterator = new GroupByOperator(iterator, tmpGB, options)
+      } else {
+        iterator = new GroupByOperator(iterator, gb, options)
+      }
+    }
+    return iterator
+  }
+
+  /**
+   * Build a physical plan for a SPARQL HAVING clause
+   * @param  {[type]} source  [description]
+   * @param  {[type]} query   [description]
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
+  _buildHaving (source, query, options) {
+    let iterator = source
+    for (let i = 0; i < query.having.length; i++) {
+      var hav = query.having[i]
+      for (var j = 0; j < hav.args.length; j++) {
+        if (typeof hav.args[j] !== 'string') {
+          var newVar = '?tmp_' + Math.random().toString(36).substring(8)
+          if (options.artificials == null) {
+            options.artificials = []
+          }
+          options.artificials.push(newVar)
+          var aggrVar = {variable: newVar, expression: hav.args[j]}
+          if (query.group) {
+            iterator = new AggrOperator(iterator, aggrVar)
+          } else {
+            query.group = 'placeholder'
+            iterator = new GroupByOperator(iterator, '*', options)
+            iterator = new AggrOperator(iterator, aggrVar)
+          }
+          hav.args[j] = newVar
+        }
+      }
+      const filter = {type: 'filter', expression: hav}
+      iterator = this._buildGroup(iterator, filter, options)
+    }
+    return iterator
+  }
+
+  /**
+   * Build a physical plan for a SPARQL ORDER BY clause
+   * @param  {[type]} source  [description]
+   * @param  {[type]} orderby [description]
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
+  _buildOrderBy (source, orderby, options) {
+    let iterator = source
+    for (let i = orderby && (orderby.length - 1); i >= 0; i--) {
+      let order = new SparqlExpressionEvaluator(orderby[i].expression)
+      let ascending = !orderby[i].descending
+      iterator = new SortIterator(iterator, (a, b) => {
+        let orderA = ''
+        let orderB = ''
+        try { orderA = order(a) } catch (error) { /* ignore order error */ }
+        try { orderB = order(b) } catch (error) { /* ignore order error */ }
+        if (!isNaN(orderA)) {
+          orderA = Number(orderA)
+        }
+        if (!isNaN(orderB)) {
+          orderB = Number(orderB)
+        }
+        if (orderA < orderB) return ascending ? -1 : 1
+        if (orderA > orderB) return ascending ? 1 : -1
+        return 0
+      }, options)
+    }
+    return iterator
   }
 }
 
