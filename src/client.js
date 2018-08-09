@@ -25,6 +25,7 @@ SOFTWARE.
 'use strict'
 
 const PlanBuilder = require('./engine/plan-builder.js')
+const SageBGPExecutor = require('./engine/sage-bgp-executor.js')
 const { isNull } = require('lodash')
 
 /**
@@ -39,13 +40,21 @@ const { isNull } = require('lodash')
  * const client = new SageClient(url)
  *
  * const query = `
+ *  PREFIX dbp: <http://dbpedia.org/property/> .
+ *  PREFIX dbo: <http://dbpedia.org/ontology/> .
  *  SELECT * WHERE {
- *    ?s <http://dbpedia.org/property/birthPlace> ?place .
- *    ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Architect> .
+ *    ?s dbp:birthPlace ?place .
+ *    ?s a dbo:Architect .
  *  }`
  * const iterator = client.execute(query)
  *
  * iterator.on('data', console.log)
+ *
+ * iterator.on('error', console.error)
+ *
+ * iterator.on('end', () => {
+ *  console.log('Query execution finished')
+ * })
  */
 class SageClient {
   /**
@@ -55,6 +64,8 @@ class SageClient {
   constructor (url) {
     this._url = url
     this._builder = new PlanBuilder()
+    // register the BGP executor for Sage execution context
+    this._builder.setExecutor(new SageBGPExecutor())
   }
 
   /**
@@ -64,7 +75,7 @@ class SageClient {
    */
   execute (query, spy = null) {
     if (isNull(spy)) {
-      return this._builder.build(query, this._url, {})
+      return this._builder.build(query, this._url)
     }
     return this._builder.build(query, this._url, {spy: spy})
   }

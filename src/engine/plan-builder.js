@@ -26,9 +26,7 @@ SOFTWARE.
 
 const { Parser } = require('sparqljs')
 const AsyncIterator = require('asynciterator')
-const BGPOperator = require('../operators/bgp-operator.js')
 const ValuesOperator = require('../operators/values-operator.js')
-const BindJoinOperator = require('../operators/bindjoin-operator.js')
 const GroupByOperator = require('../operators/gb-operator.js')
 const OperationOperator = require('../operators/op-operator.js')
 const AggrOperator = require('../operators/agg-operator.js')
@@ -82,6 +80,15 @@ class PlanBuilder {
   constructor (prefixes = {}) {
     this._dispatcher = null
     this._parser = new Parser(prefixes)
+    this._executor = null
+  }
+
+  /**
+   * Set the BGP execuor used to evaluate Basic Graph patterns
+   * @param {BGPExecutor} executor - BGP execuor used to evaluate Basic Graph patterns
+   */
+  setExecutor (executor) {
+    this._executor = executor
   }
 
   build (query, url, options = {}, source = null) {
@@ -249,6 +256,9 @@ class PlanBuilder {
 
     switch (group.type) {
       case 'bgp':
+        if (_.isNull(this._executor)) {
+          throw new Error('A PlanBuilder cannot evaluate a Basic Graph Pattern without setting a BGPExecutor')
+        }
         var copyGroup = Object.assign({}, group)
         var ret = transformPath(copyGroup.triples, copyGroup, options)
         var bgp = ret[0]
@@ -263,29 +273,8 @@ class PlanBuilder {
           }
           return this._buildWhere(source, groups, childOptions)
         } else {
-          var isSingleton = false
-          var typeFound = false
-          var tested = source
-          while (!typeFound) {
-            if (tested instanceof AsyncIterator.ClonedIterator) {
-              if (tested._source != null) {
-                tested = tested._source
-              } else {
-                isSingleton = true
-                typeFound = true
-              }
-            } else if (tested instanceof AsyncIterator.SingletonIterator) {
-              isSingleton = true
-              typeFound = true
-            } else {
-              typeFound = true
-            }
-          }
-          if (!isSingleton) {
-            return new BindJoinOperator(source, bgp, options)
-          } else {
-            return new BGPOperator(source, bgp, options)
-          }
+          // delegate BGP evaluation to current executor
+          return this._executor._buildIterator(source, bgp, options)
         }
       case 'query':
         return this.build(group, options.client._url, options, source)
