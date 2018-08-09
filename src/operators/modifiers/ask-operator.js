@@ -27,15 +27,9 @@ SOFTWARE.
 const { TransformIterator } = require('asynciterator')
 
 /**
- * @fileOverview This module contains physical SPARQL operators
- * @module Operators
- */
-
-/**
  * A AskOperator output True if a source iterator has solutions, false otherwise.
  * results are outputed following the SPARQL XML results format
  * @extends TransformIterator
- * @memberof Operators
  * @author Thomas Minier
  * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#ask}
  */
@@ -56,13 +50,13 @@ class AskOperator extends TransformIterator {
 
   _transform (bindings, done) {
     this._noResults = false
-    this._push('<?xml version="1.0"?>\n<sparql xmlns="http://www.w3.org/2005/sparql-results#">\n\t<boolean>true</boolean>\n</sparql>\n')
+    this._push(true)
     done()
   }
 
   _flush (done) {
     if (this._noResults) {
-      this._push('<?xml version="1.0"?>\n<sparql xmlns="http://www.w3.org/2005/sparql-results#">\n\t<boolean>false</boolean>\n</sparql>\n')
+      this._push(false)
     }
     done()
   }

@@ -24,7 +24,7 @@ SOFTWARE.
 
 'use strict'
 
-const SparqlIterator = require('./sparql-iterator.js')
+const PlanBuilder = require('./engine/plan-builder.js')
 const { isNull } = require('lodash')
 
 /**
@@ -54,6 +54,7 @@ class SageClient {
    */
   constructor (url) {
     this._url = url
+    this._builder = new PlanBuilder()
   }
 
   /**
@@ -63,9 +64,9 @@ class SageClient {
    */
   execute (query, spy = null) {
     if (isNull(spy)) {
-      return new SparqlIterator(query, {}, this._url)
+      return this._builder.build(query, this._url, {})
     }
-    return new SparqlIterator(query, {spy: spy}, this._url)
+    return this._builder.build(query, this._url, {spy: spy})
   }
 }
 
