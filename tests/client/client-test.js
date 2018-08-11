@@ -52,4 +52,32 @@ describe('SageClient', () => {
       done()
     })
   })
+
+  it('should evaluate a SPARQL query with OPTIONAL clauses', done => {
+    const query = `
+    prefix dbo: <http://dbpedia.org/ontology/>
+    prefix dbr: <http://dbpedia.org/resource/>
+    prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+    SELECT DISTINCT ?performer ?name WHERE {
+      ?work dbo:writer dbr:Michael_Jackson;
+        dbo:musicalArtist ?performer.
+      OPTIONAL {
+        ?performer rdfs:label ?name.
+        FILTER LANGMATCHES(LANG(?name), 'EN')
+      }
+    }`
+    const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const results = []
+
+    const iterator = client.execute(query)
+    iterator.on('error', done)
+    iterator.on('data', b => {
+      results.push(b)
+    })
+    iterator.on('end', () => {
+      expect(results.length).to.equal(52)
+      done()
+    })
+  })
 })
