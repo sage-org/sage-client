@@ -1,4 +1,4 @@
-/* file : sage-bgp-executor.js
+/* file : sage-service-executor.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier
@@ -24,23 +24,34 @@ SOFTWARE.
 
 'use strict'
 
-const BGPExecutor = require('./bgp-executor.js')
-const BGPOperator = require('../operators/bgp-operator.js')
-const BindJoinOperator = require('../operators/bindjoin-operator.js')
+const GraphExecutor = require('./graph-executor.js')
+const SageRequestClient = require('../../utils/sage-request-client')
 
 /**
- * Evaluate Basic Graph patterns using a Sage server
- * @extends BGPExecutor
+ * A SageServiceExecutor evaluates SERVICE clauses against a remote sage server
+ * @extends GraphExecutor
  * @author Thomas Minier
  * @author Corentin Marionneau
  */
-class SageBGPExecutor extends BGPExecutor {
-  execute (source, patterns, options, isJoinIdentity) {
-    if (isJoinIdentity) {
-      return new BGPOperator(source, patterns, options)
+class SageServiceExecutor extends GraphExecutor {
+  constructor (defaultClient, builder) {
+    super()
+    this._builder = builder
+    this._clients = new Map()
+    this._clients.set('default', defaultClient)
+  }
+
+  execute (source, uri, subquery, options) {
+    // set Sage client used to evaluate the subquery
+    if (!this._clients.has(uri)) {
+      if (!uri.startsWith('http')) {
+        throw new Error(`Invalid url in SERVICE clause: ${uri}`)
+      }
+      this._clients.set(uri, new SageRequestClient(uri, options.spy))
     }
-    return new BindJoinOperator(source, patterns, options)
+    options.client = this._clients.get(uri)
+    return this._builder.build(subquery, options, source)
   }
 }
 
-module.exports = SageBGPExecutor
+module.exports = SageServiceExecutor

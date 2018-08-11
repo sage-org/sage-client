@@ -8,7 +8,7 @@
   },
   "scripts": {
     "lint": "standard",
-    "test": "mocha tests/**/*-test.js --tiemout 5000",
+    "test": "mocha tests/**/*-test.js",
     "build": "webpack"
   },
   "repository": {

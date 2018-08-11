@@ -34,7 +34,6 @@ const UnionOperator = require('../operators/union-operator.js')
 const SortIterator = require('ldf-client/lib/sparql/SortIterator')
 const DistinctIterator = require('../operators/distinct-operator.js')
 const SparqlExpressionEvaluator = require('../utils/SparqlExpressionEvaluator.js')
-const SageRequestClient = require('../utils/sage-request-client')
 // solution modifiers
 const SelectOperator = require('../operators/modifiers/select-operator.js')
 const AskOperator = require('../operators/modifiers/ask-operator.js')
@@ -81,39 +80,46 @@ class PlanBuilder {
     this._dispatcher = null
     this._parser = new Parser(prefixes)
     this._executor = null
+    this._serviceExecutor = null
   }
 
   /**
-   * Set the BGP execuor used to evaluate Basic Graph patterns
+   * Set the BGP executor used to evaluate Basic Graph patterns
    * @param {BGPExecutor} executor - BGP execuor used to evaluate Basic Graph patterns
    */
   setExecutor (executor) {
     this._executor = executor
   }
 
-  build (query, url, options = {}, source = null) {
+  /**
+   * Set the executor used to evaluate SERVICE clauses
+   * @param {GraphExecutor} executor - Execuor used to evaluate SERVICE clauses
+   */
+  setServiceExecutor (executor) {
+    this._serviceExecutor = executor
+  }
+
+  /**
+   * Build the physical query execution of a SPARQL query
+   * and returns an iterator that can be consumed to evaluate the query.
+   * @param  {string|Object} query         - SPARQL query to evaluate (in string or JSON format)
+   * @param  {Object}        [options={}]  - Execution options
+   * @param  {AsyncIterator} [source=null] - Source iterator
+   * @return {AsyncIterator} An iterator that can be consumed to evaluate the query.
+   */
+  build (query, options = {}, source = null) {
     if (_.isNull(source)) {
+      // build pipeline starting iterator
       source = AsyncIterator.single({})
     }
 
-    if (options.servers != null) {
-      if (options.servers[url] != null) {
-        options.client = options.servers[url]
-      } else {
-        options.servers[url] = new SageRequestClient(url, options.spy)
-        options.client = options.servers[url]
-      }
-    } else {
-      options.servers = {}
-      options.servers[url] = new SageRequestClient(url, options.spy)
-      options.client = options.servers[url]
+    // If needed, parse the string query into a logical query execution plan
+    if (typeof query === 'string') {
+      query = new Parser(options.prefixes).parse(query)
     }
-
-    // Parse the query into a logical query execution plan
-    query = new Parser(options.prefixes).parse(query)
     options.prefixes = query.prefixes
 
-    // Handle VALUES
+    // Handle VALUES clauses
     if (query.values != null) {
       query.where.push({type: 'values', values: query.values})
     }
@@ -186,11 +192,11 @@ class PlanBuilder {
   }
 
   /**
-   * Optimize a WHERE clause and build the correspoding physical plan
-   * @param  {[type]} source  [description]
-   * @param  {[type]} groups  [description]
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
+   * Optimize a WHERE clause and build the corresponding physical plan
+   * @param  {AsyncIterator} source  - Source iterator
+   * @param  {Object[]}     groups   - WHERE clause to process
+   * @param  {Object}       options  - Execution options
+   * @return {AsyncIterator} An iterator used to evaluate the WHERE clause
    */
   _buildWhere (source, groups, options) {
     groups.sort(function (a, b) {
@@ -260,6 +266,7 @@ class PlanBuilder {
           throw new Error('A PlanBuilder cannot evaluate a Basic Graph Pattern without setting a BGPExecutor')
         }
         var copyGroup = Object.assign({}, group)
+        // evaluate possible Property paths
         var ret = transformPath(copyGroup.triples, copyGroup, options)
         var bgp = ret[0]
         var union = ret[1]
@@ -273,19 +280,17 @@ class PlanBuilder {
           }
           return this._buildWhere(source, groups, childOptions)
         } else {
-          // delegate BGP evaluation to current executor
+          // delegate BGP evaluation to an executor
           return this._executor._buildIterator(source, bgp, options)
         }
       case 'query':
-        return this.build(group, options.client._url, options, source)
+        return this.build(group, options, source)
       case 'service':
-        var subquery = group.patterns[0]
-        let newQuery = subquery
-        if (subquery.type === 'bgp') {
-          var tmpQuery = {prefixes: options.prefixes, queryType: 'SELECT', variables: ['*'], type: 'query', where: [subquery]}
-          newQuery = tmpQuery
+        if (_.isNull(this._serviceExecutor)) {
+          throw new Error('A PlanBuilder cannot evaluate a Service clause without setting a Service Executor')
         }
-        return this.build(newQuery, group.name, options, source)
+        // delegate SERVICE evaluation to an executor
+        return this._serviceExecutor._buildIterator(source, group, options)
       case 'group':
         return this._buildWhere(source, group.patterns, childOptions)
       case 'optional':
@@ -306,7 +311,7 @@ class PlanBuilder {
           try { return !/^"false"|^"0"/.test(evaluate(bindings)) } catch (error) { return false }
         })
       default:
-        throw new Error('Unsupported group type: ' + group.type)
+        throw new Error(`Unsupported SPARQL clause fround in query: ${group.type}`)
     }
   }
 

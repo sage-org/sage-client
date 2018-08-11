@@ -41,7 +41,7 @@ class SageOperator extends BufferedIterator {
    * @param {Object[]} optionals  - Optional BGPs to evaluate
    * @param {Object[]} filters  - Set of filters to evaluate
    */
-  constructor (bgp, sageClient, options, optionals = [], filters = []) {
+  constructor (bgp, sageClient, options) {
     super()
     this._options = options
     for (var i = 0; i < bgp.length; i++) {
@@ -60,8 +60,6 @@ class SageOperator extends BufferedIterator {
       }
     }
     this._bgp = bgp
-    this._optionals = optionals
-    this._filters = filters
     this._next = null
     this._bufferedValues = []
     this._sageClient = sageClient

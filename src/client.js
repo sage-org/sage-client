@@ -25,8 +25,9 @@ SOFTWARE.
 'use strict'
 
 const PlanBuilder = require('./engine/plan-builder.js')
-const SageBGPExecutor = require('./engine/sage-bgp-executor.js')
-const { isNull } = require('lodash')
+const SageBGPExecutor = require('./engine/executors/sage-bgp-executor.js')
+const SageServiceExecutor = require('./engine/executors/sage-service-executor.js')
+const SageRequestClient = require('./utils/sage-request-client.js')
 
 /**
  * A SageClient is used to evaluate SPARQL queries againt a SaGe server
@@ -61,11 +62,19 @@ class SageClient {
    * Constructor
    * @param {string} url - The url of the dataset to query
    */
-  constructor (url) {
+  constructor (url, spy = null) {
     this._url = url
+    this._spy = spy
+    this._client = new SageRequestClient(url, this._spy)
     this._builder = new PlanBuilder()
-    // register the BGP executor for Sage execution context
+    // register the BGP & SERVICE executors for Sage execution context
     this._builder.setExecutor(new SageBGPExecutor())
+    this._builder.setServiceExecutor(new SageServiceExecutor(this._client, this._builder))
+    // prepare execution options
+    this._options = {
+      client: this._client,
+      spy: this._spy
+    }
   }
 
   /**
@@ -73,11 +82,8 @@ class SageClient {
    * @param  {string} query - SPARQL query to evaluate
    * @return {SparqlIterator} An iterator which evaluates the query
    */
-  execute (query, spy = null) {
-    if (isNull(spy)) {
-      return this._builder.build(query, this._url)
-    }
-    return this._builder.build(query, this._url, {spy: spy})
+  execute (query) {
+    return this._builder.build(query, this._options)
   }
 }
 

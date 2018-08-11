@@ -65,10 +65,10 @@ class BGPExecutor {
   /**
    * Build an iterator to evaluate a BGP
    * @private
-   * @param  {[type]} source   [description]
-   * @param  {[type]} patterns [description]
-   * @param  {[type]} options  [description]
-   * @return {[type]}          [description]
+   * @param  {AsyncIterator}  source  - Source iterator
+   * @param  {Object[]}  patterns     - Set of triple patterns
+   * @param  {Object}  options        - Execution options
+   * @return {AsyncIterator} An iterator used to evaluate a Basic Graph pattern
    */
   _buildIterator (source, patterns, options) {
     return this.execute(source, patterns, options, this._isJoinIdentity(source))
