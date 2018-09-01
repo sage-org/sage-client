@@ -24,8 +24,9 @@ SOFTWARE.
 
 'use strict'
 
-const GraphExecutor = require('./graph-executor.js')
-const SageRequestClient = require('../../utils/sage-request-client')
+const { ServiceExecutor } = require('sparql-engine').executors
+const SageGraph = require('../sage-graph.js')
+const { cloneDeep } = require('lodash')
 
 /**
  * A SageServiceExecutor evaluates SERVICE clauses against a remote sage server
@@ -33,24 +34,26 @@ const SageRequestClient = require('../../utils/sage-request-client')
  * @author Thomas Minier
  * @author Corentin Marionneau
  */
-class SageServiceExecutor extends GraphExecutor {
-  constructor (defaultClient, builder) {
-    super()
-    this._builder = builder
-    this._clients = new Map()
-    this._clients.set('default', defaultClient)
+class SageServiceExecutor extends ServiceExecutor {
+  constructor (builder, dataset) {
+    super(builder)
+    this._dataset = dataset
   }
 
-  execute (source, uri, subquery, options) {
-    // set Sage client used to evaluate the subquery
-    if (!this._clients.has(uri)) {
-      if (!uri.startsWith('http')) {
-        throw new Error(`Invalid url in SERVICE clause: ${uri}`)
+  _execute (source, iri, subquery, options) {
+    // Dynamically add the remote Graph as a Named Graph to the dataset
+    if (!this._dataset.hasNamedGraph(iri)) {
+      if (!iri.startsWith('http')) {
+        throw new Error(`Invalid URL in SERVICE clause: ${iri}`)
       }
-      this._clients.set(uri, new SageRequestClient(uri, options.spy))
+      this._dataset.addNamedGraph(iri, new SageGraph(iri, options.spy))
     }
-    options.client = this._clients.get(uri)
-    return this._builder.build(subquery, options, source)
+    const opts = cloneDeep(options)
+    opts._from = {
+      default: [ iri ],
+      named: []
+    }
+    return this._builder._buildQueryPlan(subquery, opts, source)
   }
 }
 

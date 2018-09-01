@@ -1,4 +1,4 @@
-/* file : sage-client.js
+/* file : lib.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier

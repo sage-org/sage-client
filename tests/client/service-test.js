@@ -25,10 +25,10 @@ SOFTWARE.
 'use strict'
 
 const expect = require('chai').expect
-const SageClient = require('../../src/client.js')
+const { SageClient } = require('../../src/lib.js')
 
 describe('Service queries', () => {
-  it.skip('should evaluate a simple SERVICE SPARQL query', done => {
+  it('should evaluate a simple SERVICE SPARQL query', done => {
     const query = `
     PREFIX dbp: <http://dbpedia.org/property/>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

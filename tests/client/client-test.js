@@ -25,7 +25,7 @@ SOFTWARE.
 'use strict'
 
 const expect = require('chai').expect
-const SageClient = require('../../src/client.js')
+const { SageClient } = require('../../src/lib.js')
 
 describe('SageClient', () => {
   it('should evaluate a simple SPARQL query', done => {

@@ -27,7 +27,7 @@ SOFTWARE.
 const { HashMapDataset, PlanBuilder } = require('sparql-engine')
 const SageGraph = require('./sage-graph.js')
 const SageBGPExecutor = require('./executors/sage-bgp-executor.js')
-// const SageServiceExecutor = require('./executors/sage-service-executor.js')
+const SageServiceExecutor = require('./executors/sage-service-executor.js')
 
 /**
  * A SageClient is used to evaluate SPARQL queries againt a SaGe server
@@ -70,7 +70,7 @@ class SageClient {
     this._builder = new PlanBuilder(this._dataset)
     // register the BGP & SERVICE executors for Sage execution context
     this._builder.bgpExecutor = new SageBGPExecutor(this._dataset)
-    // this._builder.setServiceExecutor(new SageServiceExecutor(this._client, this._builder))
+    this._builder.serviceExecutor = new SageServiceExecutor(this._builder, this._dataset)
     // prepare execution options
     this._options = {
       spy: this._spy
