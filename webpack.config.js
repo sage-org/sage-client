@@ -3,7 +3,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 
 module.exports = {
   mode: 'production',
-  entry: './src/sage-client.js',
+  entry: './src/lib.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'sage-client.bundle.js',
