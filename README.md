@@ -1,7 +1,7 @@
 # sage-client
 [![npm version](https://badge.fury.io/js/sage-client.svg)](https://badge.fury.io/js/sage-client) [![Build Status](https://travis-ci.org/sage-org/sage-client.svg?branch=master)](https://travis-ci.org/sage-org/sage-client)
 
-JS client for the SaGe query engine
+Javascript client for the SaGe query engine, built on top of the [`sparql-engine` framework](https://github.com/Callidon/sparql-engine).
 
 # Installation
 
@@ -37,33 +37,3 @@ Usage: sage-client <server> [options]
     -t, --type <mime-type>  determines the MIME type of the output (e.g., application/json) (default: application/json)
     -h, --help              output usage information
 ```
-
-# Supported SPARQL language features
-
-* SELECT, ASK, CONSTRUCT & DESCRIBE queries
-* Basic Graph Patterns
-* Optional
-* SPARQL subqueries
-* [SERVICE queries](https://www.w3.org/TR/2013/REC-sparql11-federated-query-20130321/)
-* Union
-* Limit / Offset
-* Group By
-* Order By
-* Aggregates queries (Min, Max, Avg, Count, Sum, Sample, Group_Concat)
-* SPARQL Filters:
-  * '+', '-', '\*', '/', '=', '!=', '<', '<=', '>', '>=', '!', '&&', '||'
-  * lang, langmatches
-  * contains
-  * regex
-  * str
-  * http://www.w3.org/2001/XMLSchema#integer
-  * http://www.w3.org/2001/XMLSchema#double
-  * bound
-  * isIRI, isBlank, isLiteral
-  * sameterm
-* SPARQL 1.1 VALUES
-* SPARQL 1.1 Property Paths:
-  * Sequence '/'
-  * Reverse '^'
-  * Alterative '|'
-  * Negated '!'

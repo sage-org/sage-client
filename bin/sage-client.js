@@ -27,20 +27,19 @@ SOFTWARE.
 
 const fs = require('fs')
 const program = require('commander')
-// const SageClient = require('../src/client.js')
-const SparqlIterator = require('../src/sparql-iterator.js')
-const Spy = require('../src/engine/spy.js')
-const JSONFormatter = require('../src/formatters/json-formatter.js')
-const XMLFormatter = require('../src/formatters/xml-formatter.js')
-
-const mimetypes = {
-  'application/json': JSONFormatter,
-  'application/sparql-results+json': JSONFormatter,
-  'json': JSONFormatter,
-  'application/xml': XMLFormatter,
-  'application/sparql-results+xml': XMLFormatter,
-  'xml': XMLFormatter
-}
+const { SageClient, Spy } = require('../src/lib.js')
+// TODO wait for the SPARQL formatters that will be available in sparql-engine
+// const JSONFormatter = require('../src/formatters/json-formatter.js')
+// const XMLFormatter = require('../src/formatters/xml-formatter.js')
+//
+// const mimetypes = {
+//   'application/json': JSONFormatter,
+//   'application/sparql-results+json': JSONFormatter,
+//   'json': JSONFormatter,
+//   'application/xml': XMLFormatter,
+//   'application/sparql-results+xml': XMLFormatter,
+//   'xml': XMLFormatter
+// }
 
 // Command line interface to execute queries
 program
@@ -71,19 +70,21 @@ if (program.query) {
   process.stderr.write('Error: you must specify a SPARQL query to execute.\nSee ./bin/sage-client.js --help for more details.\n')
   process.exit(1)
 }
-var iterator = new mimetypes[program.type](new SparqlIterator(query, {spy: spy}, server))
+const client = new SageClient(server, spy)
+// TODO change to: const iterator = client.execute(query, program.type)
+const iterator = client.execute(query)
 
 iterator.on('error', error => {
-  process.stderr.write('ERROR: An error occurred during query execution.\n')
-  process.stderr.write(error.stack)
+  console.error('ERROR: An error occurred during query execution.')
+  console.error(error.stack)
 })
 
 iterator.on('end', () => {
   const endTime = Date.now()
   const time = endTime - startTime
-  process.stderr.write(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s)\n`)
+  console.log(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s)`)
 })
 const startTime = Date.now()
 iterator.on('data', data => {
-  process.stdout.write(data)
+  console.log(data)
 })
