@@ -36,7 +36,7 @@ const BindJoinOperator = require('../operators/bindjoin-operator.js')
 class SageBGPExecutor extends BGPExecutor {
   _execute (source, graph, patterns, options, isJoinIdentity) {
     if (isJoinIdentity) {
-      return super._execute(source, graph, patterns, options, false)
+      return super._execute(source, graph, patterns, options, true)
     }
     return new BindJoinOperator(source, patterns, graph, options)
   }
