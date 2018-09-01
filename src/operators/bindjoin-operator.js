@@ -38,12 +38,12 @@ class BindJoinOperator extends BufferedIterator {
    * @memberof Operators
    * @param {AsyncIterator} source - The source operator
    */
-  constructor (source, bgp, options) {
+  constructor (source, bgp, graph, options) {
     super(source)
     this._bucket = []
-    this._client = options.client
-    this._options = options
+    this._graph = graph
     this._bgp = bgp
+    this._options = options
     this._sourceEnd = false
     this._source = source
     this._next = null
@@ -98,7 +98,7 @@ class BindJoinOperator extends BufferedIterator {
 
     if (that._next != null) {
       that._running = true
-      that._client.query('union', that._bucket, that._next)
+      that._graph.evalUnion(that._bucket, that._next)
         .then(body => {
           var bindings = body.bindings.slice(0)
           var numbers = []
@@ -150,7 +150,7 @@ class BindJoinOperator extends BufferedIterator {
     } else {
       if (!that._running && (that._sourceEnd || that._bucket.length > 14)) {
         that._running = true
-        that._client.query('union', that._bucket, that._next)
+        that._graph.evalUnion(that._bucket, that._next)
           .then(body => {
             let bindings = body.bindings.slice(0)
             let numbers = []

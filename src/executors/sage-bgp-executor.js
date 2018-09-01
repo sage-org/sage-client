@@ -1,4 +1,4 @@
-/* file : ask-operator.js
+/* file : sage-bgp-executor.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier
@@ -24,42 +24,25 @@ SOFTWARE.
 
 'use strict'
 
-const { TransformIterator } = require('asynciterator')
+const { BGPExecutor } = require('sparql-engine').executors
+const BGPOperator = require('../operators/bgp-operator.js')
+const BindJoinOperator = require('../operators/bindjoin-operator.js')
 
 /**
- * A AskOperator output True if a source iterator has solutions, false otherwise.
- * results are outputed following the SPARQL XML results format
- * @extends TransformIterator
+ * Evaluate Basic Graph patterns using a Sage server
+ * @extends BGPExecutor
  * @author Thomas Minier
- * @see {@link https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#ask}
+ * @author Corentin Marionneau
  */
-class AskOperator extends TransformIterator {
-  /**
-   * Constructor
-   * @memberof Operators
-   * @param {AsyncIterator} source - Source iterator
-   */
-  constructor (source) {
-    super(source.take(1))
-    this._noResults = true
-  }
-
-  get cardinality () {
-    return 1
-  }
-
-  _transform (bindings, done) {
-    this._noResults = false
-    this._push(true)
-    done()
-  }
-
-  _flush (done) {
-    if (this._noResults) {
-      this._push(false)
+class SageBGPExecutor extends BGPExecutor {
+  _execute (source, graph, patterns, options, isJoinIdentity) {
+    if (isJoinIdentity) {
+      // TODO: fix artifical bug in sparql-engine and then swamp this for
+      // a call to super.execute(source, graph, patterns, options, false)
+      return new BGPOperator(source, patterns, graph, options)
     }
-    done()
+    return new BindJoinOperator(source, patterns, graph, options)
   }
 }
 
-module.exports = AskOperator
+module.exports = SageBGPExecutor

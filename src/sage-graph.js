@@ -1,4 +1,4 @@
-/* file : sage-bgp-executor.js
+/* file : sage-graph.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier
@@ -24,23 +24,33 @@ SOFTWARE.
 
 'use strict'
 
-const BGPExecutor = require('./bgp-executor.js')
-const BGPOperator = require('../../operators/bgp-operator.js')
-const BindJoinOperator = require('../../operators/bindjoin-operator.js')
+const { Graph } = require('sparql-engine')
+const SageRequestClient = require('./sage-request-client.js')
+const SageOperator = require('./operators/sage-operator.js')
 
-/**
- * Evaluate Basic Graph patterns using a Sage server
- * @extends BGPExecutor
- * @author Thomas Minier
- * @author Corentin Marionneau
- */
-class SageBGPExecutor extends BGPExecutor {
-  execute (source, patterns, options, isJoinIdentity) {
-    if (isJoinIdentity) {
-      return new BGPOperator(source, patterns, options)
-    }
-    return new BindJoinOperator(source, patterns, options)
+class SageGraph extends Graph {
+  constructor (url, spy = null) {
+    super()
+    this._url = url
+    this._spy = spy
+    this._httpClient = new SageRequestClient(this._url, this._spy)
+  }
+
+  insert () {
+    throw new Error('A Sage Graph is read-only: INSERT queries are not supported')
+  }
+
+  delete () {
+    throw new Error('A Sage Graph is read-only: DELETE queries are not supported')
+  }
+
+  evalBGP (bgp, options) {
+    return new SageOperator(bgp, this._httpClient, options)
+  }
+
+  evalUnion (patterns, nextLink = null) {
+    return this._httpClient.query('union', patterns, nextLink)
   }
 }
 
-module.exports = SageBGPExecutor
+module.exports = SageGraph

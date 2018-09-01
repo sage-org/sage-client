@@ -24,10 +24,10 @@ SOFTWARE.
 
 'use strict'
 
-const PlanBuilder = require('./engine/plan-builder.js')
-const SageBGPExecutor = require('./engine/executors/sage-bgp-executor.js')
-const SageServiceExecutor = require('./engine/executors/sage-service-executor.js')
-const SageRequestClient = require('./utils/sage-request-client.js')
+const { HashMapDataset, PlanBuilder } = require('sparql-engine')
+const SageGraph = require('./sage-graph.js')
+const SageBGPExecutor = require('./executors/sage-bgp-executor.js')
+// const SageServiceExecutor = require('./executors/sage-service-executor.js')
 
 /**
  * A SageClient is used to evaluate SPARQL queries againt a SaGe server
@@ -65,14 +65,14 @@ class SageClient {
   constructor (url, spy = null) {
     this._url = url
     this._spy = spy
-    this._client = new SageRequestClient(url, this._spy)
-    this._builder = new PlanBuilder()
+    this._graph = new SageGraph(url, this._spy)
+    this._dataset = new HashMapDataset(url, this._graph)
+    this._builder = new PlanBuilder(this._dataset)
     // register the BGP & SERVICE executors for Sage execution context
-    this._builder.setExecutor(new SageBGPExecutor())
-    this._builder.setServiceExecutor(new SageServiceExecutor(this._client, this._builder))
+    this._builder.bgpExecutor = new SageBGPExecutor(this._dataset)
+    // this._builder.setServiceExecutor(new SageServiceExecutor(this._client, this._builder))
     // prepare execution options
     this._options = {
-      client: this._client,
       spy: this._spy
     }
   }
@@ -80,7 +80,7 @@ class SageClient {
   /**
    * Build an iterator used to evaluate a SPARQL query against a SaGe server
    * @param  {string} query - SPARQL query to evaluate
-   * @return {SparqlIterator} An iterator which evaluates the query
+   * @return {SparqlIterator} An iterator used to evaluates the query
    */
   execute (query) {
     return this._builder.build(query, this._options)

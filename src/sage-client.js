@@ -23,12 +23,10 @@ SOFTWARE.
 */
 
 'use strict'
-const Spy = require('./engine/spy')
-const SparqlIterator = require('./sparql-iterator')
-const SageRequestClient = require('./utils/sage-request-client')
+const Spy = require('./spy.js')
+const SageClient = require('./client.js')
 
 module.exports = {
   Spy: Spy,
-  SparqlIterator: SparqlIterator,
-  SageRequestClient: SageRequestClient
+  SageClient: SageClient
 }

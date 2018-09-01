@@ -51,7 +51,7 @@ describe('SageClient', () => {
       expect(results.length).to.equal(43)
       done()
     })
-  })
+  }).timeout(2000)
 
   it('should evaluate a SPARQL query with OPTIONAL clauses', done => {
     const query = `
@@ -76,8 +76,8 @@ describe('SageClient', () => {
       results.push(b)
     })
     iterator.on('end', () => {
-      expect(results.length).to.equal(52)
+      expect(results.length).to.equal(26)
       done()
     })
-  })
+  }).timeout(2000)
 })

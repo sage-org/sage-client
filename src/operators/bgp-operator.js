@@ -25,23 +25,22 @@ SOFTWARE.
 'use strict'
 
 const { MultiTransformIterator } = require('asynciterator')
-const SageOperator = require('./sage-operator.js')
 const rdf = require('ldf-client/lib/util/RdfUtil')
 const { assign, some, size } = require('lodash')
 
 class BGPOperator extends MultiTransformIterator {
-  constructor (source, bgp, options) {
+  constructor (source, bgp, graph, options) {
     super(source, options)
     this._bgp = bgp
+    this._graph = graph
     this._options = options
-    this._sageClient = options.client
   }
 
   _createTransformer (bindings) {
     const boundedBGP = this._bgp.map(p => rdf.applyBindings(bindings, p))
     const hasVars = boundedBGP.map(p => some(p, v => v.startsWith('?')))
       .reduce((acc, v) => acc && v, true)
-    return new SageOperator(boundedBGP, this._sageClient, this._options)
+    return this._graph.evalBGP(boundedBGP, this._options)
       .map(item => {
         if (size(item) === 0 && hasVars) return null
         return assign(item, bindings)
