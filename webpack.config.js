@@ -14,7 +14,7 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: /node_modules(?!\/sparql-engine)/,
         use: {
           loader: 'babel-loader',
           options: {
