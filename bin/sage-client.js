@@ -30,7 +30,7 @@ const program = require('commander')
 const { SageClient, Spy } = require('../src/lib.js')
 // TODO wait for the SPARQL formatters that will be available in sparql-engine
 // const JSONFormatter = require('../src/formatters/json-formatter.js')
-// const XMLFormatter = require('../src/formatters/xml-formatter.js')
+const XMLFormatter = require('sparql-engine/src/formatters/xml-formatter.js')
 //
 // const mimetypes = {
 //   'application/json': JSONFormatter,
@@ -71,8 +71,11 @@ if (program.query) {
   process.exit(1)
 }
 const client = new SageClient(server, spy)
+let iterator = client.execute(query)
 // TODO change to: const iterator = client.execute(query, program.type)
-const iterator = client.execute(query)
+if (program.type === 'xml') {
+  iterator = new XMLFormatter(iterator)
+}
 
 iterator.on('error', error => {
   console.error('ERROR: An error occurred during query execution.')
