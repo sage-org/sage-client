@@ -24,7 +24,9 @@ SOFTWARE.
 
 'use strict'
 
+const { Observable } = require('rxjs')
 const { BufferedIterator } = require('asynciterator')
+const { BindingBase } = require('sparql-engine')
 
 /**
  * A SageOperator is an iterator over the evaluation of a BGP against a NLJ/BGP interface
@@ -85,7 +87,7 @@ class SageOperator extends BufferedIterator {
     } else {
       this._sageClient.query('bgp', this._bgp, this._next)
         .then(body => {
-          this._bufferedValues = body.bindings.slice(0)
+          this._bufferedValues = body.bindings.slice(0).map(b => BindingBase.fromObject(b))
           if (body.next) {
             this._next = body.next
             this._read(count, done)
@@ -103,4 +105,11 @@ class SageOperator extends BufferedIterator {
   }
 }
 
-module.exports = SageOperator
+module.exports = function (bgp, sageClient, options) {
+  return Observable.create(observer => {
+    const iterator = new SageOperator(bgp, sageClient, options)
+    iterator.on('error', err => observer.error(err))
+    iterator.on('end', () => observer.complete())
+    iterator.on('data', b => observer.next(b))
+  })
+}

@@ -43,11 +43,9 @@ describe('SageClient', () => {
     const results = []
 
     const iterator = client.execute(query)
-    iterator.on('error', done)
-    iterator.on('data', b => {
+    iterator.subscribe(b => {
       results.push(b)
-    })
-    iterator.on('end', () => {
+    }, done, () => {
       expect(results.length).to.equal(43)
       done()
     })
@@ -56,27 +54,23 @@ describe('SageClient', () => {
   it('should evaluate a SPARQL query with OPTIONAL clauses', done => {
     const query = `
     prefix dbo: <http://dbpedia.org/ontology/>
-    prefix dbr: <http://dbpedia.org/resource/>
     prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    prefix dbp: <http://dbpedia.org/property/>
 
-    SELECT DISTINCT ?performer ?name WHERE {
-      ?work dbo:writer dbr:Michael_Jackson;
-        dbo:musicalArtist ?performer.
-      OPTIONAL {
-        ?performer rdfs:label ?name.
-        FILTER LANGMATCHES(LANG(?name), 'EN')
-      }
+    SELECT ?person ?name ?deathDate WHERE {
+      ?person a dbo:Artist;
+        rdfs:label ?name;
+        dbo:birthPlace [ rdfs:label "York"@en ].
+      OPTIONAL { ?person dbp:dateOfDeath ?deathDate. }
     }`
     const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)
-    iterator.on('error', done)
-    iterator.on('data', b => {
+    iterator.subscribe(b => {
       results.push(b)
-    })
-    iterator.on('end', () => {
-      expect(results.length).to.equal(26)
+    }, done, () => {
+      expect(results.length).to.equal(32)
       done()
     })
   }).timeout(2000)

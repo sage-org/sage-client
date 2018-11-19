@@ -44,6 +44,7 @@ class BindJoinOperator extends BufferedIterator {
     this._graph = graph
     this._bgp = bgp
     this._options = options
+    this._options.optional = false
     this._sourceEnd = false
     this._source = source
     this._next = null
@@ -57,7 +58,8 @@ class BindJoinOperator extends BufferedIterator {
     var fillBucket = function () {
       var mapping
       while (that._bucket.length < 15 && that._source._readable && (mapping = that._source.read())) {
-        if (mapping != null) {
+        mapping = (mapping !== null) ? mapping.toObject() : null
+        if (mapping !== null) {
           var cpt = that._bucket.length
           var bind = _.cloneDeep(that._bgp)
           for (let i = 0; i < bind.length; i++) {

@@ -39,18 +39,16 @@ describe('Service queries', () => {
       SERVICE <http://sage.univ-nantes.fr/sparql/dbpedia-2015-04en> {
         ?movie rdfs:label ?titleEng, ?title.
       }
-      FILTER LANGMATCHES(LANG(?titleEng), 'EN')
+      FILTER LANGMATCHES(LANG(?titleEng), 'en')
       FILTER (LANG(?title) != 'EN')
     }`
     const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)
-    iterator.on('error', done)
-    iterator.on('data', b => {
+    iterator.subscribe(b => {
       results.push(b)
-    })
-    iterator.on('end', () => {
+    }, done, () => {
       expect(results.length).to.equal(239)
       done()
     })

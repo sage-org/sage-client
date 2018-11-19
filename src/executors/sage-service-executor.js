@@ -24,7 +24,7 @@ SOFTWARE.
 
 'use strict'
 
-const { ServiceExecutor } = require('sparql-engine').executors
+const { ServiceExecutor } = require('sparql-engine')
 const SageGraph = require('../sage-graph.js')
 const { cloneDeep } = require('lodash')
 
@@ -35,8 +35,8 @@ const { cloneDeep } = require('lodash')
  * @author Corentin Marionneau
  */
 class SageServiceExecutor extends ServiceExecutor {
-  constructor (builder, dataset) {
-    super(builder)
+  constructor (dataset) {
+    super()
     this._dataset = dataset
   }
 
@@ -53,7 +53,7 @@ class SageServiceExecutor extends ServiceExecutor {
       default: [ iri ],
       named: []
     }
-    return this._builder._buildQueryPlan(subquery, opts, source)
+    return this.builder._buildQueryPlan(subquery, opts, source)
   }
 }
 

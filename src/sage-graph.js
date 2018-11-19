@@ -45,7 +45,7 @@ class SageGraph extends Graph {
   }
 
   evalBGP (bgp, options) {
-    return new SageOperator(bgp, this._httpClient, options)
+    return SageOperator(bgp, this._httpClient, options)
   }
 
   evalUnion (patterns, nextLink = null) {

@@ -24,7 +24,7 @@ SOFTWARE.
 
 'use strict'
 
-const { BGPExecutor } = require('sparql-engine').executors
+const { BGPExecutor, BindingBase } = require('sparql-engine')
 const BindJoinOperator = require('../operators/bindjoin-operator.js')
 
 /**
@@ -38,7 +38,7 @@ class SageBGPExecutor extends BGPExecutor {
     if (isJoinIdentity) {
       return super._execute(source, graph, patterns, options, true)
     }
-    return new BindJoinOperator(source, patterns, graph, options)
+    return new BindJoinOperator(source, patterns, graph, options).map(x => BindingBase.fromObject(x))
   }
 }
 
