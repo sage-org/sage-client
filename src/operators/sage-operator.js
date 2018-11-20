@@ -25,91 +25,37 @@ SOFTWARE.
 'use strict'
 
 const { Observable } = require('rxjs')
-const { BufferedIterator } = require('asynciterator')
 const { BindingBase } = require('sparql-engine')
 
-/**
- * A SageOperator is an iterator over the evaluation of a BGP against a NLJ/BGP interface
- * @extends BufferedIterator
- * @memberof Operators
- * @author Thomas Minier
- */
-class SageOperator extends BufferedIterator {
-  /**
-   * Constructor
-   * @memberof Operators
-   * @param {Object[]} bgp  - BGP to evaluate
-   * @param {SageRequestClient} sageClient - HTTP client used to query a Sage server
-   * @param {Object[]} optionals  - Optional BGPs to evaluate
-   * @param {Object[]} filters  - Set of filters to evaluate
-   */
-  constructor (bgp, sageClient, options) {
-    super()
-    this._options = options
-    for (var i = 0; i < bgp.length; i++) {
-      var tp = bgp[i]
-      for (var variable in tp) {
-        if (tp[variable].startsWith('_:')) {
-          var newVar = '?' + tp[variable].slice(2)
-          tp[variable] = newVar
-          if (this._options.artificials != null) {
-            this._options.artificials.push(newVar)
-          } else {
-            this._options.artificials = []
-            this._options.artificials.push(newVar)
-          }
-        }
+async function query (observer, bgp, sageClient, options) {
+  let hasNext = true
+  let next = null
+  while (hasNext) {
+    try {
+      const body = await sageClient.query('bgp', bgp, next)
+      body.bindings
+        .slice(0)
+        .forEach(b => observer.next(BindingBase.fromObject(b)))
+      hasNext = body.hasNext
+      if (hasNext) {
+        next = body.next
       }
-    }
-    this._bgp = bgp
-    this._next = null
-    this._bufferedValues = []
-    this._sageClient = sageClient
-  }
-
-  _flush (done) {
-    if (this._bufferedValues.length > 0) {
-      this._bufferedValues.forEach(b => this._push(b))
-    }
-    done()
-  }
-
-  _read (count, done) {
-    // try to find values previously downloaded
-    while (count > 0 && this._bufferedValues.length > 0) {
-      this._push(this._bufferedValues.shift())
-      count--
-    }
-
-    // fetch more values from the server
-    if (count <= 0) {
-      done()
-    } else {
-      this._sageClient.query('bgp', this._bgp, this._next)
-        .then(body => {
-          this._bufferedValues = body.bindings.slice(0).map(b => BindingBase.fromObject(b))
-          if (body.next) {
-            this._next = body.next
-            this._read(count, done)
-          } else {
-            this.close()
-            done()
-          }
-        })
-        .catch(err => {
-          this.emit('error', err)
-          this.close()
-          done()
-        })
+    } catch (e) {
+      hasNext = false
+      observer.error(e)
     }
   }
 }
 
+/**
+ * Constructor
+ * @param {Object[]} bgp  - BGP to evaluate
+ * @param {SageRequestClient} sageClient - HTTP client used to query a Sage server
+ */
 module.exports = function (bgp, sageClient, options) {
   return Observable.create(observer => {
-    const iterator = new SageOperator(bgp, sageClient, options)
-    iterator.on('error', err => observer.error(err))
-    iterator.on('end', () => observer.complete())
-    iterator.on('data', b => observer.next(b))
+    query(observer, bgp, sageClient, options)
+      .then(() => observer.complete())
+      .catch(err => observer.error(err))
   })
 }

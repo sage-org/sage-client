@@ -26,7 +26,7 @@ SOFTWARE.
 
 const { HashMapDataset, PlanBuilder } = require('sparql-engine')
 const SageGraph = require('./sage-graph.js')
-// const SageBGPExecutor = require('./executors/sage-bgp-executor.js')
+const SageBGPExecutor = require('./executors/sage-bgp-executor.js')
 const SageServiceExecutor = require('./executors/sage-service-executor.js')
 
 /**
@@ -69,7 +69,7 @@ class SageClient {
     this._dataset = new HashMapDataset(url, this._graph)
     this._builder = new PlanBuilder(this._dataset)
     // register the BGP & SERVICE executors for Sage execution context
-    // this._builder.bgpExecutor = new SageBGPExecutor(this._dataset)
+    this._builder.bgpExecutor = new SageBGPExecutor(this._dataset)
     this._builder.serviceExecutor = new SageServiceExecutor(this._dataset)
     // prepare execution options
     this._options = {
