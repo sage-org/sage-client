@@ -34,7 +34,6 @@ async function query (observer, bgp, sageClient, options) {
     try {
       const body = await sageClient.query('bgp', bgp, next)
       body.bindings
-        .slice(0)
         .forEach(b => observer.next(BindingBase.fromObject(b)))
       hasNext = body.hasNext
       if (hasNext) {
