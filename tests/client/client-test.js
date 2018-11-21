@@ -65,12 +65,29 @@ describe('SageClient', () => {
     }`
     const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
+    let nbBounded = 0
+    const boundedDeathDate = new Map()
+    boundedDeathDate.set('http://dbpedia.org/resource/Charles_Francis_Hansom', '"1888"^^<http://www.w3.org/2001/XMLSchema#integer>')
+    boundedDeathDate.set('http://dbpedia.org/resource/E_Ridsdale_Tate', '"1922"^^<http://www.w3.org/2001/XMLSchema#integer>')
+    boundedDeathDate.set('http://dbpedia.org/resource/Henry_Gyles', '"1709"^^<http://www.w3.org/2001/XMLSchema#integer>')
+    boundedDeathDate.set('http://dbpedia.org/resource/Henry_Keyworth_Raine', '"1932"^^<http://www.w3.org/2001/XMLSchema#integer>')
+    boundedDeathDate.set('http://dbpedia.org/resource/John_Henry_Middleton', '"1896"^^<http://www.w3.org/2001/XMLSchema#integer>')
+    boundedDeathDate.set('http://dbpedia.org/resource/Joseph_Halfpenny', '"1811"^^<http://www.w3.org/2001/XMLSchema#integer>')
+    boundedDeathDate.set('http://dbpedia.org/resource/Mary_Ellen_Best', '"1891"^^<http://www.w3.org/2001/XMLSchema#integer>')
+    boundedDeathDate.set('http://dbpedia.org/resource/William_Doughty_(painter)', '"1782"^^<http://www.w3.org/2001/XMLSchema#integer>')
 
     const iterator = client.execute(query)
     iterator.subscribe(b => {
+      if (boundedDeathDate.has(b.get('?person'))) {
+        nbBounded++
+        expect(b.get('?deathDate')).to.equal(boundedDeathDate.get(b.get('?person')))
+      } else {
+        expect(b.get('?deathDate')).to.equal('UNBOUND')
+      }
       results.push(b)
     }, done, () => {
       expect(results.length).to.equal(32)
+      expect(nbBounded).to.equal(8)
       done()
     })
   }).timeout(2000)
