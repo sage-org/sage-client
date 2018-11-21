@@ -25,7 +25,7 @@ SOFTWARE.
 'use strict'
 
 const { BGPExecutor } = require('sparql-engine')
-// const bindJoin = require('../operators/bind-join.js')
+const boundJoin = require('../operators/bound-join.js')
 
 /**
  * Evaluate Basic Graph patterns using a Sage server
@@ -35,8 +35,7 @@ const { BGPExecutor } = require('sparql-engine')
  */
 class SageBGPExecutor extends BGPExecutor {
   _execute (source, graph, patterns, options, isJoinIdentity) {
-    return super._execute(source, graph, patterns, options, isJoinIdentity)
-    // return bindJoin(source, patterns, graph, options)
+    return boundJoin(source, patterns, graph, options)
   }
 }
 

@@ -27,12 +27,12 @@ SOFTWARE.
 const { Observable } = require('rxjs')
 const { BindingBase } = require('sparql-engine')
 
-async function query (observer, bgp, sageClient, options) {
+async function query (observer, type, bgp, sageClient, options) {
   let hasNext = true
   let next = null
   while (hasNext) {
     try {
-      const body = await sageClient.query('bgp', bgp, next)
+      const body = await sageClient.query(type, bgp, next)
       body.bindings
         .forEach(b => observer.next(BindingBase.fromObject(b)))
       hasNext = body.hasNext
@@ -51,9 +51,9 @@ async function query (observer, bgp, sageClient, options) {
  * @param {Object[]} bgp  - BGP to evaluate
  * @param {SageRequestClient} sageClient - HTTP client used to query a Sage server
  */
-module.exports = function (bgp, sageClient, options) {
-  return Observable.create(observer => {
-    query(observer, bgp, sageClient, options)
+module.exports = function (bgp, type, sageClient, options) {
+  return new Observable(observer => {
+    query(observer, type, bgp, sageClient, options)
       .then(() => observer.complete())
       .catch(err => observer.error(err))
   })

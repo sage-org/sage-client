@@ -45,11 +45,11 @@ class SageGraph extends Graph {
   }
 
   evalBGP (bgp, options) {
-    return SageOperator(bgp, this._httpClient, options)
+    return SageOperator(bgp, 'bgp', this._httpClient, options)
   }
 
-  evalUnion (patterns, nextLink = null) {
-    return this._httpClient.query('union', patterns, nextLink)
+  evalUnion (patterns, options) {
+    return SageOperator(patterns, 'union', this._httpClient, options)
   }
 }
 
