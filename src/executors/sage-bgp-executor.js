@@ -37,6 +37,33 @@ class SageBGPExecutor extends BGPExecutor {
   _execute (source, graph, patterns, options, isJoinIdentity) {
     return boundJoin(source, patterns, graph, options)
   }
+
+  _replaceBlankNodes (patterns) {
+    const newVariables = []
+    function rewrite (term) {
+      let res = term
+      if (term.startsWith('_:')) {
+        res = '?' + term.slice(2)
+        if (newVariables.indexOf(res) < 0) {
+          newVariables.push(res)
+        }
+      }
+      return res
+    }
+    const newBGP = patterns.map(p => {
+      const tp = {
+        subject: rewrite(p.subject),
+        predicate: rewrite(p.predicate),
+        object: rewrite(p.object)
+      }
+      // do not remove graph annotations!!!
+      if ('graph' in p) {
+        tp.graph = p.graph
+      }
+      return tp
+    })
+    return [newBGP, newVariables]
+  }
 }
 
 module.exports = SageBGPExecutor

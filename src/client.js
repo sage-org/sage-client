@@ -24,7 +24,8 @@ SOFTWARE.
 
 'use strict'
 
-const { HashMapDataset, PlanBuilder } = require('sparql-engine')
+const { HashMapDataset } = require('sparql-engine')
+const SagePlanBuilder = require('./sage-plan-builder.js')
 const SageGraph = require('./sage-graph.js')
 const SageBGPExecutor = require('./executors/sage-bgp-executor.js')
 const SageServiceExecutor = require('./executors/sage-service-executor.js')
@@ -67,7 +68,7 @@ class SageClient {
     this._spy = spy
     this._graph = new SageGraph(url, this._spy)
     this._dataset = new HashMapDataset(url, this._graph)
-    this._builder = new PlanBuilder(this._dataset)
+    this._builder = new SagePlanBuilder(this._dataset)
     // register the BGP & SERVICE executors for Sage execution context
     this._builder.bgpExecutor = new SageBGPExecutor(this._dataset)
     this._builder.serviceExecutor = new SageServiceExecutor(this._dataset)

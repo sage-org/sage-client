@@ -36,6 +36,10 @@ class SageGraph extends Graph {
     this._httpClient = new SageRequestClient(this._url, this._spy)
   }
 
+  get url () {
+    return this._url
+  }
+
   insert () {
     throw new Error('A Sage Graph is read-only: INSERT queries are not supported')
   }
