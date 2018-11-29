@@ -25,6 +25,7 @@ SOFTWARE.
 'use strict'
 
 const { HashMapDataset, PlanBuilder } = require('sparql-engine')
+const { finalize } = require('rxjs/operators')
 const SageGraph = require('./sage-graph.js')
 const SageBGPExecutor = require('./executors/sage-bgp-executor.js')
 const SageServiceExecutor = require('./executors/sage-service-executor.js')
@@ -83,7 +84,8 @@ class SageClient {
    * @return {SparqlIterator} An iterator used to evaluates the query
    */
   execute (query) {
-    return this._builder.build(query, this._options)
+    this._graph.open()
+    return this._builder.build(query, this._options).pipe(finalize(() => this._graph.close()))
   }
 }
 

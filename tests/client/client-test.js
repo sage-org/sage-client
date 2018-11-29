@@ -51,6 +51,23 @@ describe('SageClient', () => {
     })
   }).timeout(2000)
 
+  it('should evaluate a SPARQL query with a LIMIT', done => {
+    const query = `
+    SELECT * WHERE {
+      ?s ?p ?o
+    } LIMIT 10`
+    const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const results = []
+
+    const iterator = client.execute(query)
+    iterator.subscribe(b => {
+      results.push(b)
+    }, done, () => {
+      expect(results.length).to.equal(10)
+      done()
+    })
+  }).timeout(2000)
+
   it('should evaluate a SPARQL query with OPTIONAL clauses', done => {
     const query = `
     prefix dbo: <http://dbpedia.org/ontology/>

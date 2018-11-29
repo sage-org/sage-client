@@ -51,6 +51,14 @@ class SageGraph extends Graph {
   evalUnion (patterns, options) {
     return SageOperator(patterns, 'union', this._httpClient, options)
   }
+
+  open () {
+    this._httpClient.open()
+  }
+
+  close () {
+    this._httpClient.close()
+  }
 }
 
 module.exports = SageGraph

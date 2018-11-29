@@ -1,9 +1,13 @@
 const path = require('path')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+require('@babel/polyfill')
 
 module.exports = {
   mode: 'production',
-  entry: './src/lib.js',
+  entry: [
+    '@babel/polyfill',
+    './src/lib.js'
+  ],
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'sage-client.bundle.js',

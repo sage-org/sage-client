@@ -44,9 +44,21 @@ class SageRequestClient {
         gzip: true,
         time: true
       })
+    this._isClosed = false
+  }
+
+  open () {
+    this._isClosed = false
+  }
+
+  close () {
+    this._isClosed = true
   }
 
   query (type, bgp, next = null) {
+    if (this._isClosed) {
+      return Promise.resolve({ bindings: [], hasNext: false, next: null })
+    }
     var queryBody
     switch (type) {
       case 'bgp':
