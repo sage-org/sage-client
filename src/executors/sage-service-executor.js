@@ -35,24 +35,22 @@ const { cloneDeep } = require('lodash')
  * @author Corentin Marionneau
  */
 class SageServiceExecutor extends ServiceExecutor {
-  constructor (dataset) {
+  constructor (dataset, spy = null) {
     super()
     this._dataset = dataset
+    this._spy = spy
   }
 
-  _execute (source, iri, subquery, options) {
+  _execute (source, iri, subquery, context) {
     // Dynamically add the remote Graph as a Named Graph to the dataset
     if (!this._dataset.hasNamedGraph(iri)) {
       if (!iri.startsWith('http')) {
         throw new Error(`Invalid URL in SERVICE clause: ${iri}`)
       }
-      this._dataset.addNamedGraph(iri, new SageGraph(iri, options.spy))
+      this._dataset.addNamedGraph(iri, new SageGraph(iri, this._spy))
     }
-    const opts = cloneDeep(options)
-    opts._from = {
-      default: [ iri ],
-      named: []
-    }
+    const opts = context.clone()
+    opts.defaultGraphs = [ iri ]
     return this.builder._buildQueryPlan(subquery, opts, source)
   }
 }

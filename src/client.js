@@ -71,11 +71,7 @@ class SageClient {
     this._builder = new PlanBuilder(this._dataset)
     // register the BGP & SERVICE executors for Sage execution context
     this._builder.bgpExecutor = new SageBGPExecutor(this._dataset)
-    this._builder.serviceExecutor = new SageServiceExecutor(this._dataset)
-    // prepare execution options
-    this._options = {
-      spy: this._spy
-    }
+    this._builder.serviceExecutor = new SageServiceExecutor(this._dataset, this._spy)
   }
 
   /**
@@ -85,7 +81,7 @@ class SageClient {
    */
   execute (query) {
     this._graph.open()
-    return this._builder.build(query, this._options).pipe(finalize(() => this._graph.close()))
+    return this._builder.build(query).pipe(finalize(() => this._graph.close()))
   }
 }
 
