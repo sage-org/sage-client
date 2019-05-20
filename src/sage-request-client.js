@@ -93,7 +93,7 @@ class SageRequestClient {
           }
         } else {
           if (this._spy !== null) {
-            this._spy.reportHTTPResponseTime(res.timings.end)
+            this._spy.reportHTTPResponseTime(res.timingPhases.firstByte)
             this._spy.reportHTTPRequest()
             this._spy.reportImportTime(body.stats.import)
             this._spy.reportExportTime(body.stats.export)
