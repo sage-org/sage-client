@@ -71,24 +71,20 @@ if (program.query) {
   process.exit(1)
 }
 const client = new SageClient(server, spy)
-let iterator = client.execute(query)
+// let iterator = client.execute(query)
 // TODO change to: const iterator = client.execute(query, program.type)
 /* if (program.type === 'xml') {
   iterator = new XMLFormatter(iterator)
 }
 */
-
-iterator.on('error', error => {
+const startTime = Date.now()
+client.execute(query).subscribe(b => {
+  console.log(b)
+}, (error) => {
   console.error('ERROR: An error occurred during query execution.')
   console.error(error.stack)
-})
-
-iterator.on('end', () => {
+}, () => {
   const endTime = Date.now()
   const time = endTime - startTime
   console.log(`SPARQL query evaluated in ${time / 1000}s with ${spy.nbHTTPCalls} HTTP request(s)`)
-})
-const startTime = Date.now()
-iterator.on('data', data => {
-  console.log(data)
 })
