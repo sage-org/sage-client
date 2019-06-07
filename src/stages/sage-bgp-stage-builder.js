@@ -1,4 +1,4 @@
-/* file : sage-service-executor.js
+/* file : sage-bgp-executor.js
 MIT License
 
 Copyright (c) 2018 Thomas Minier
@@ -24,35 +24,19 @@ SOFTWARE.
 
 'use strict'
 
-const { ServiceExecutor } = require('sparql-engine')
-const SageGraph = require('../sage-graph.js')
-const { cloneDeep } = require('lodash')
+const { stages } = require('sparql-engine')
+const boundJoin = require('../operators/bound-join.js')
 
 /**
- * A SageServiceExecutor evaluates SERVICE clauses against a remote sage server
- * @extends GraphExecutor
+ * Evaluate Basic Graph patterns using a Sage server
+ * @extends BGPExecutor
  * @author Thomas Minier
  * @author Corentin Marionneau
  */
-class SageServiceExecutor extends ServiceExecutor {
-  constructor (dataset, spy = null) {
-    super()
-    this._dataset = dataset
-    this._spy = spy
-  }
-
-  _execute (source, iri, subquery, context) {
-    // Dynamically add the remote Graph as a Named Graph to the dataset
-    if (!this._dataset.hasNamedGraph(iri)) {
-      if (!iri.startsWith('http')) {
-        throw new Error(`Invalid URL in SERVICE clause: ${iri}`)
-      }
-      this._dataset.addNamedGraph(iri, new SageGraph(iri, this._spy))
-    }
-    const opts = context.clone()
-    opts.defaultGraphs = [ iri ]
-    return this.builder._buildQueryPlan(subquery, opts, source)
+class SageBGPStageBuilder extends stages.BGPStageBuilder {
+  _buildIterator (source, graph, patterns, options, isJoinIdentity) {
+    return boundJoin(source, patterns, graph, options)
   }
 }
 
-module.exports = SageServiceExecutor
+module.exports = SageBGPStageBuilder

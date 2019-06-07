@@ -24,11 +24,10 @@ SOFTWARE.
 
 'use strict'
 
-const { HashMapDataset, PlanBuilder } = require('sparql-engine')
+const { HashMapDataset, PlanBuilder, stages } = require('sparql-engine')
 const { finalize } = require('rxjs/operators')
 const SageGraph = require('./sage-graph.js')
-const SageBGPExecutor = require('./executors/sage-bgp-executor.js')
-const SageServiceExecutor = require('./executors/sage-service-executor.js')
+const SageBGPStageBuilder = require('./stages/sage-bgp-stage-builder.js')
 
 /**
  * A SageClient is used to evaluate SPARQL queries againt a SaGe server
@@ -68,10 +67,16 @@ class SageClient {
     this._spy = spy
     this._graph = new SageGraph(url, this._spy)
     this._dataset = new HashMapDataset(url, this._graph)
+    // set graph factory to create SageGraph on demand
+    this._dataset.setGraphFactory(iri => {
+      if (!iri.startsWith('http')) {
+        throw new Error(`Invalid URL in SERVICE clause: ${iri}`)
+      }
+      return new SageGraph(iri, this._spy)
+    })
     this._builder = new PlanBuilder(this._dataset)
-    // register the BGP & SERVICE executors for Sage execution context
-    this._builder.bgpExecutor = new SageBGPExecutor(this._dataset)
-    this._builder.serviceExecutor = new SageServiceExecutor(this._dataset, this._spy)
+    // register the BGP stage builder for Sage context
+    this._builder.use(stages.SPARQL_OPERATION.BGP, new SageBGPStageBuilder(this._dataset))
   }
 
   /**
