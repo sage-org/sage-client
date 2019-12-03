@@ -24,13 +24,13 @@ SOFTWARE.
 
 'use strict'
 
-import { Graph } from 'sparql-engine'
+import { Graph, Pipeline } from 'sparql-engine'
 import { Bindings } from 'sparql-engine/dist/rdf/bindings'
 import ExecutionContext from 'sparql-engine/dist/engine/context/execution-context'
 import { PipelineStage, PipelineInput } from 'sparql-engine/dist/engine/pipeline/pipeline-engine'
 import { Algebra } from 'sparqljs'
 import { SageRequestClient } from './sage-http-client'
-import { SageBGPOperator } from './operators/sage-operators'
+import { SageBGPOperator, SageManyBGPOperator } from './operators/sage-operators'
 import Spy from './spy'
 
 /**
@@ -53,17 +53,20 @@ export default class SageGraph extends Graph {
     this._httpClient = new SageRequestClient(this._url, this._spy)
   }
 
-  find(triple: any, context: ExecutionContext): PipelineInput<any> {
-      throw new Error("Method not implemented.");
+  find(triple: Algebra.TripleObject, context: ExecutionContext): PipelineInput<Algebra.TripleObject> {
+    const input = this.evalBGP([triple], context)
+      return Pipeline.getInstance().map(input, bindings => {
+        return bindings.bound(triple)
+      })
   }
 
   evalBGP (bgp: Algebra.TripleObject[], context: ExecutionContext): PipelineStage<Bindings> {
     return SageBGPOperator(bgp, this._defaultGraph, this._httpClient)
   }
 
-  /*evalUnion (patterns, options) {
-    return SageOperator(patterns, 'union', this._httpClient, options)
-  }*/
+  evalUnion (patterns: Array<Algebra.TripleObject[]>, options: ExecutionContext): PipelineStage<Bindings> {
+    return SageManyBGPOperator(patterns, this._defaultGraph, this._httpClient)
+  }
 
   open () {
     this._httpClient.open()

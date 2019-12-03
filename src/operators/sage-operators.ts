@@ -28,41 +28,20 @@ import { BindingBase, Pipeline } from 'sparql-engine'
 import { Bindings } from 'sparql-engine/dist/rdf/bindings'
 import { StreamPipelineInput, PipelineStage } from 'sparql-engine/dist/engine/pipeline/pipeline-engine'
 import { SageRequestClient, SageResponseBody } from '../sage-http-client'
+import { formatBGPQuery, formatManyBGPQuery } from './utils'
 import { Algebra, Generator } from 'sparqljs'
 
 /**
- * Create a SPARQL query (in string format) from a Basic Graph Pattern
- * @param  bgp - Basic Graph Pattern, i.e., a set of triple patterns
- * @return A conjunctive SPARQL query
- */
-function formatBGPQuery (triples: Algebra.TripleObject[]): string {
-  const generator = new Generator()
-  const bgpNode: Algebra.BGPNode = {
-    type: 'bgp',
-    triples
-  }
-  const jsonQuery: Algebra.RootNode = {
-    type: "query",
-    prefixes: {},
-    variables: ['*'],
-    queryType: "SELECT",
-    where: [ bgpNode ]
-  }
-  return generator.stringify(jsonQuery)
-}
-
-/**
- * Async. function used to evaluate a SPARQL BGP query at a sage server,
+ * Async. function used to evaluate a SPARQL query at a sage server,
  * fetch all query results and insert them in steam fashion
  * into a pipeline of iterators.
  * @author Thomas Minier
- * @param  bgp          - BGP to evaluate
+ * @param  query        - SPARQL query to evaluate
  * @param  sageClient   - Client used to query the SaGe server
  * @param  streamInput  - Input of the pipeline of iterators (where results are injected)
  * @return A Promise that resolves when all query results have been fetched & processed
  */
-async function queryBGP (bgp: Algebra.TripleObject[], defaultGraph: string, sageClient: SageRequestClient, streamInput: StreamPipelineInput<Bindings>) {
-  let query: string = formatBGPQuery(bgp)
+async function querySage (query: string, defaultGraph: string, sageClient: SageRequestClient, streamInput: StreamPipelineInput<Bindings>) {
   let hasNext = true
   let next: string | null = null
   while (hasNext) {
@@ -89,8 +68,27 @@ async function queryBGP (bgp: Algebra.TripleObject[], defaultGraph: string, sage
  * @return A stage of the pipeline which produces the query results
  */
 export function SageBGPOperator (bgp: Algebra.TripleObject[], defaultGraph: string, sageClient: SageRequestClient): PipelineStage<Bindings> {
+  const generator = new Generator()
+  const query = formatBGPQuery(generator, bgp)
   return Pipeline.getInstance().fromAsync(input => {
-    queryBGP(bgp, defaultGraph, sageClient, input)
+    querySage(query, defaultGraph, sageClient, input)
+      .then(() => input.complete())
+      .catch(err => input.error(err))
+  })
+}
+
+/**
+ * An operator used to evaluate a SPARQL query with a set of BGPs
+ * @author Thomas Minier
+ * @param bgps  - Set of BGPs to evaluate, i.e., a set of set of triple patterns
+ * @param sageClient - HTTP client used to query a Sage server
+ * @return A stage of the pipeline which produces the query results
+ */
+export function SageManyBGPOperator (bgps: Array<Algebra.TripleObject[]>, defaultGraph: string, sageClient: SageRequestClient): PipelineStage<Bindings> {
+  const generator = new Generator()
+  const query = formatManyBGPQuery(generator, bgps)
+  return Pipeline.getInstance().fromAsync(input => {
+    querySage(query, defaultGraph, sageClient, input)
       .then(() => input.complete())
       .catch(err => input.error(err))
   })
