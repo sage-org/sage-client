@@ -27,7 +27,7 @@ SOFTWARE.
 import { HashMapDataset, PlanBuilder, Pipeline, stages } from 'sparql-engine'
 import SageGraph from './sage-graph'
 import Spy from './spy'
-// const SageBGPStageBuilder = require('./stages/sage-bgp-stage-builder.js')
+import SageBGPStageBuilder from './stages/sage-bgp-stage-builder'
 
 /**
  * A SageClient is used to evaluate SPARQL queries againt a SaGe server
@@ -79,8 +79,7 @@ export default class SageClient {
     })
     this._builder = new PlanBuilder(this._dataset)
     // register the BGP stage builder for Sage context
-    // TODO re-enable to use bound joins & speed up federated queries
-    // this._builder.use(stages.SPARQL_OPERATION.BGP, new SageBGPStageBuilder(this._dataset))
+    this._builder.use(stages.SPARQL_OPERATION.BGP, new SageBGPStageBuilder(this._dataset))
   }
 
   /**

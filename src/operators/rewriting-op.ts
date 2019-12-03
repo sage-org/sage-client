@@ -1,7 +1,7 @@
-/* file : rewriting-op.js
+/* file : rewriting-op.ts
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2018-2019 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,16 @@ SOFTWARE.
 
 'use strict'
 
-const { map } = require('rxjs/operators')
+import { Graph, Pipeline, ExecutionContext } from 'sparql-engine'
+import { Bindings } from 'sparql-engine/dist/rdf/bindings'
+import { Algebra } from 'sparqljs'
 
 /**
  * Find a rewriting key in a list of variables
  * For example, in [ ?s, ?o_1 ], the rewriting key is 1
  * @private
  */
-function findKey (variables, maxValue = 15) {
+function findKey (variables: IterableIterator<string>, maxValue: number = 15): number {
   let key = -1
   for (let v of variables) {
     for (var i = 0; i < maxValue; i++) {
@@ -47,14 +49,14 @@ function findKey (variables, maxValue = 15) {
  * Undo the bound join rewriting on solutions bindings, e.g., rewrite all variables "?o_1" to "?o"
  * @private
  */
-function revertBinding (key, input, variables) {
+function revertBinding (key: number, input: Bindings, variables: IterableIterator<string>): Bindings {
   const newBinding = input.empty()
   for (let vName of variables) {
     if (vName.endsWith('_' + key)) {
       const index = vName.indexOf('_' + key)
-      newBinding.set(vName.substring(0, index), input.get(vName))
+      newBinding.set(vName.substring(0, index), input.get(vName)!)
     } else {
-      newBinding.set(vName, input.get(vName))
+      newBinding.set(vName, input.get(vName)!)
     }
   }
   return newBinding
@@ -64,12 +66,12 @@ function revertBinding (key, input, variables) {
  * Undo the rewriting on solutions bindings, and then merge each of them with the corresponding input binding
  * @private
  */
-function rewriteSolutions (bindings, rewritingMap) {
+function rewriteSolutions (bindings: Bindings, rewritingMap: Map<number, Bindings>): Bindings {
   const key = findKey(bindings.variables())
   // rewrite binding, and then merge it with the corresponding one in the bucket
   let newBinding = revertBinding(key, bindings, bindings.variables())
   if (rewritingMap.has(key)) {
-    newBinding = newBinding.union(rewritingMap.get(key))
+    newBinding = newBinding.union(rewritingMap.get(key)!)
   }
   return newBinding
 }
@@ -79,18 +81,14 @@ function rewriteSolutions (bindings, rewritingMap) {
  * and then rewrite bindings generated and performs union with original bindings.
  * @author Thomas Minier
  * @private
- * @param  {SageGraph} graph - Graph queried
- * @param  {TripleObject[][]} bgpBucket - List of BGPs to evaluate
- * @param  {Map<String, Binding>} rewritingTable - Map <rewriting key -> original bindings>
- * @param  {Object} options - Query execution option
- * @return {Observable<Binding>} An Observable which evaluates the query.
+ * @param  graph - Graph queried
+ * @param  bgpBucket - List of BGPs to evaluate
+ * @param  rewritingTable - Map <rewriting key -> original bindings>
+ * @param  context - Query execution context
+ * @return A pipeline stage which evaluates the query.
  */
-function rewritingOp (graph, bgpBucket, rewritingTable, options) {
-  return graph.evalUnion(bgpBucket, options)
-    .pipe(map(bindings => {
-      const x = rewriteSolutions(bindings, rewritingTable)
-      return x
-    }))
+export default function rewritingOp (graph: Graph, bgpBucket: Algebra.TripleObject[][], rewritingTable: Map<number, Bindings>, context: ExecutionContext) {
+  return Pipeline.getInstance().map(graph.evalUnion(bgpBucket, context), bindings => {
+    return rewriteSolutions(bindings, rewritingTable)
+  })
 }
-
-module.exports = rewritingOp
