@@ -88,5 +88,3 @@ export default class SageGraph extends Graph {
     return Promise.reject(new Error('A Sage Graph is read-only: remote updates are not allowed'))
   }
 }
-
-module.exports = SageGraph

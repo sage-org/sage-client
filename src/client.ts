@@ -25,7 +25,7 @@ SOFTWARE.
 'use strict'
 
 import { HashMapDataset, PlanBuilder, Pipeline, stages } from 'sparql-engine'
-import SageGraph from './sage-graph.js'
+import SageGraph from './sage-graph'
 import Spy from './spy'
 // const SageBGPStageBuilder = require('./stages/sage-bgp-stage-builder.js')
 

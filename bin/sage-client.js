@@ -27,7 +27,7 @@ SOFTWARE.
 
 const fs = require('fs')
 const program = require('commander')
-const { SageClient, Spy } = require('../src/lib.js')
+const { SageClient, Spy } = require('../dist/lib.js')
 // TODO wait for the SPARQL formatters that will be available in sparql-engine
 // const JSONFormatter = require('../src/formatters/json-formatter.js')
 // const XMLFormatter = require('sparql-engine/src/formatters/xml-formatter.js')
@@ -44,20 +44,20 @@ const { SageClient, Spy } = require('../src/lib.js')
 // Command line interface to execute queries
 program
   .description('Execute a SPARQL query using a SaGe interface')
-  .usage('<server> [options]')
+  .usage('<server> <default-graph-iri> [options]')
   .option('-q, --query <query>', 'evaluates the given SPARQL query')
   .option('-f, --file <file>', 'evaluates the SPARQL query in the given file')
-  // .option('-t, --timeout <timeout>', 'set SPARQL query timeout in milliseconds (default: 30mn)', 30 * 60 * 1000)
   .option('-t, --type <mime-type>', 'determines the MIME type of the output (e.g., application/json)', 'application/json')
   .parse(process.argv)
 
 // get servers
-if (program.args.length !== 1) {
+if (program.args.length !== 2) {
   process.stderr.write('Error: you must specify exactly one server to use.\nSee ./bin/sage-client.js --help for more details.\n')
   process.exit(1)
 }
 
 const server = program.args[0]
+const defaultGraph = program.args[1]
 const spy = new Spy()
 
 // fetch SPARQL query to execute
@@ -70,7 +70,7 @@ if (program.query) {
   process.stderr.write('Error: you must specify a SPARQL query to execute.\nSee ./bin/sage-client.js --help for more details.\n')
   process.exit(1)
 }
-const client = new SageClient(server, spy)
+const client = new SageClient(server, defaultGraph, spy)
 // let iterator = client.execute(query)
 // TODO change to: const iterator = client.execute(query, program.type)
 /* if (program.type === 'xml') {
@@ -79,7 +79,7 @@ const client = new SageClient(server, spy)
 */
 const startTime = Date.now()
 client.execute(query).subscribe(b => {
-  console.log(b)
+  console.log(b.toObject())
 }, (error) => {
   console.error('ERROR: An error occurred during query execution.')
   console.error(error.stack)
