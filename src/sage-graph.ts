@@ -39,7 +39,7 @@ import Spy from './spy'
  * at a SaGe server using the sparl-engine framework.
  * @author Thomas Minier
  */
-class SageGraph extends Graph {
+export default class SageGraph extends Graph {
   private readonly _url: string
   private readonly _defaultGraph: string
   private readonly _httpClient: SageRequestClient
