@@ -53,11 +53,11 @@ export default class SageGraph extends Graph {
     this._httpClient = new SageRequestClient(this._url, this._spy)
   }
 
-  find(triple: Algebra.TripleObject, context: ExecutionContext): PipelineInput<Algebra.TripleObject> {
+  find (triple: Algebra.TripleObject, context: ExecutionContext): PipelineInput<Algebra.TripleObject> {
     const input = this.evalBGP([triple], context)
-      return Pipeline.getInstance().map(input, bindings => {
-        return bindings.bound(triple)
-      })
+    return Pipeline.getInstance().map(input, bindings => {
+      return bindings.bound(triple)
+    })
   }
 
   evalBGP (bgp: Algebra.TripleObject[], context: ExecutionContext): PipelineStage<Bindings> {
@@ -84,7 +84,7 @@ export default class SageGraph extends Graph {
     return Promise.reject(new Error('A Sage Graph is read-only: remote updates are not allowed'))
   }
 
-  clear(): Promise<void> {
+  clear (): Promise<void> {
     return Promise.reject(new Error('A Sage Graph is read-only: remote updates are not allowed'))
   }
 }

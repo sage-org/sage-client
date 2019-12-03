@@ -68,7 +68,7 @@ export class SageRequestClient {
     this._url = url
     this._spy = spy
     // TODO check if this really enable http multi-sockets and speed up query exec.
-    request.forever({timeout: 1000, minSockets: 10}, null)
+    request.forever({ timeout: 1000, minSockets: 10 }, null)
     this._httpClient = request.defaults({
       method: 'POST',
       json: true,
@@ -103,7 +103,7 @@ export class SageRequestClient {
     if (this._isClosed) {
       return Promise.resolve({ bindings: [], hasNext: false, next: null })
     }
-    let queryBody : SageQueryBody = {
+    const queryBody: SageQueryBody = {
       query,
       defaultGraph,
       next

@@ -35,10 +35,10 @@ export function formatBGPQuery (generator: Generator, triples: Algebra.TripleObj
     triples
   }
   const jsonQuery: Algebra.RootNode = {
-    type: "query",
+    type: 'query',
     prefixes: {},
     variables: ['*'],
-    queryType: "SELECT",
+    queryType: 'SELECT',
     where: [ bgpNode ]
   }
   return generator.stringify(jsonQuery)
@@ -57,10 +57,10 @@ export function formatManyBGPQuery (generator: Generator, bgps: Array<Algebra.Tr
     })
   }
   const jsonQuery: Algebra.RootNode = {
-    type: "query",
+    type: 'query',
     prefixes: {},
     variables: ['*'],
-    queryType: "SELECT",
+    queryType: 'SELECT',
     where: [ unionNode ]
   }
   return generator.stringify(jsonQuery)

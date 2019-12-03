@@ -36,7 +36,7 @@ import { Algebra } from 'sparqljs'
 function findKey (variables: IterableIterator<string>, maxValue: number = 15): number {
   let key = -1
   for (let v of variables) {
-    for (var i = 0; i < maxValue; i++) {
+    for (let i = 0; i < maxValue; i++) {
       if (v.endsWith('_' + i)) {
         return i
       }
