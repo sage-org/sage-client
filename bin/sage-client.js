@@ -28,6 +28,7 @@ SOFTWARE.
 const fs = require('fs')
 const program = require('commander')
 const { SageClient, Spy } = require('../dist/lib.js')
+
 // TODO wait for the SPARQL formatters that will be available in sparql-engine
 // const JSONFormatter = require('../src/formatters/json-formatter.js')
 // const XMLFormatter = require('sparql-engine/src/formatters/xml-formatter.js')
@@ -43,16 +44,16 @@ const { SageClient, Spy } = require('../dist/lib.js')
 
 // Command line interface to execute queries
 program
-  .description('Execute a SPARQL query using a SaGe interface')
-  .usage('<server> <default-graph-iri> [options]')
+  .description('Execute a SPARQL query using a SaGe server and the IRI of the default RDF graph')
+  .usage('<server-url> <default-graph-iri> [options]')
   .option('-q, --query <query>', 'evaluates the given SPARQL query')
-  .option('-f, --file <file>', 'evaluates the SPARQL query in the given file')
-  .option('-t, --type <mime-type>', 'determines the MIME type of the output (e.g., application/json)', 'application/json')
+  .option('-f, --file <file>', 'evaluates the SPARQL query stored in the given file')
+  // .option('-t, --type <mime-type>', 'determines the MIME type of the output (e.g., application/json)', 'application/json')
   .parse(process.argv)
 
-// get servers
+// validate the number of CLI arguments
 if (program.args.length !== 2) {
-  process.stderr.write('Error: you must specify exactly one server to use.\nSee ./bin/sage-client.js --help for more details.\n')
+  process.stderr.write('Error: you must input exactly one server and one default graph IRI to use.\nSee sage-client --help for more details.\n')
   process.exit(1)
 }
 
@@ -67,16 +68,12 @@ if (program.query) {
 } else if (program.file && fs.existsSync(program.file)) {
   query = fs.readFileSync(program.file, 'utf-8')
 } else {
-  process.stderr.write('Error: you must specify a SPARQL query to execute.\nSee ./bin/sage-client.js --help for more details.\n')
+  process.stderr.write('Error: you must input a SPARQL query to execute.\nSee sage-client --help for more details.\n')
   process.exit(1)
 }
+
 const client = new SageClient(server, defaultGraph, spy)
-// let iterator = client.execute(query)
-// TODO change to: const iterator = client.execute(query, program.type)
-/* if (program.type === 'xml') {
-  iterator = new XMLFormatter(iterator)
-}
-*/
+
 const startTime = Date.now()
 client.execute(query).subscribe(b => {
   console.log(b.toObject())
