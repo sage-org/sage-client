@@ -9,7 +9,7 @@ script:
   - npm run test
 before_deploy:
   - npm run build
-  - cp wdist/sage-bundle.js dist/sage-bundle.js
+  - cp wdist/sage-client.bundle.js dist/
 deploy:
 - provider: npm
   skip_cleanup: true
