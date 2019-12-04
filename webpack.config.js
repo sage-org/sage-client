@@ -28,13 +28,13 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 require('@babel/polyfill')
 
 module.exports = {
-  mode: 'development',
+  mode: 'production',
   entry: [
     '@babel/polyfill',
-    './src/lib.js'
+    './src/lib.ts'
   ],
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'wdist'),
     filename: 'sage-client.bundle.js',
     library: 'sage',
     libraryTarget: 'var'
@@ -42,19 +42,14 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        exclude: /node_modules(?!\/sparql-engine)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['env']
-          }
-        }
+        test: /\.ts$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
       }
     ]
   },
   resolve: {
-    extensions: ['*', '.js']
+    extensions: ['.ts', '.js']
   },
   node: {
     fs: 'empty',
