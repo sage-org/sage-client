@@ -69,13 +69,18 @@ export default class SageClient {
     this._defaultGraph = defaultGraph
     this._spy = spy
     this._graph = new SageGraph(this._url, this._defaultGraph, this._spy)
-    this._dataset = new HashMapDataset(url, this._graph)
+    this._dataset = new HashMapDataset(this._defaultGraph, this._graph)
     // set graph factory to create SageGraph on demand
     this._dataset.setGraphFactory(iri => {
       if (!iri.startsWith('http')) {
         throw new Error(`Invalid URL in SERVICE clause: ${iri}`)
       }
-      return new SageGraph(iri, this._defaultGraph, this._spy)
+      if (!iri.includes('/sparql')) {
+        throw new Error('The requested server does not look like a valid SaGe server')
+      }
+      const index = iri.indexOf('/sparql')
+      const url = iri.substring(0, index + 7)
+      return new SageGraph(url, iri, this._spy)
     })
     this._builder = new PlanBuilder(this._dataset)
     // register the BGP stage builder for Sage context

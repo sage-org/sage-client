@@ -2,12 +2,13 @@
   "name": "sage-client",
   "version": "1.3.2",
   "description": "Javascript client for SaGe interfaces",
-  "main": "./src/lib.js",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
   "bin": {
     "sage-client": "bin/sage-client.js"
   },
   "scripts": {
-    "test": "mocha tests/**/*-test.js",
+    "test": "tsc && mocha tests/**/*-test.js",
     "build": "webpack",
     "lint": "tslint -c ./tslint.json --fix src/*.ts src/**/*.ts",
     "build-ts": "tsc"
@@ -36,10 +37,8 @@
     "commander": "^2.20.0",
     "lodash": "^4.17.15",
     "request": "^2.88.0",
-    "rxjs": "^6.5.2",
-    "sparql-engine": "../sparql-engine/",
-    "sparqljs": "^2.0.3",
-    "xml": "^1.0.1"
+    "sparql-engine": "^0.5.6",
+    "sparqljs": "^2.0.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.149",

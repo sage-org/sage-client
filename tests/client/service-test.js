@@ -25,7 +25,7 @@ SOFTWARE.
 'use strict'
 
 const expect = require('chai').expect
-const { SageClient } = require('../../src/lib.js')
+const { SageClient } = require('../../dist/lib.js')
 
 describe('Service queries', () => {
   it('should evaluate a simple SERVICE SPARQL query', done => {
@@ -42,7 +42,7 @@ describe('Service queries', () => {
       FILTER LANGMATCHES(LANG(?titleEng), 'en')
       FILTER (LANG(?title) != 'EN')
     }`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)
