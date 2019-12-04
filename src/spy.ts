@@ -1,7 +1,7 @@
-/* file : spy.js
+/* file : spy.ts
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2018-2020 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,15 @@ SOFTWARE.
  * A Spy inspect SPARQL query execution to provide metadata after query evaluation
  * @author Thomas Minier
  */
-class Spy {
+export default class Spy {
+  private _nbHttpCalls: number
+  private _nbResults: number
+  private _responseTimes: Array<number>
+  private _overheads: Array<number>
+  private _importTimes: Array<number>
+  private _exportTimes: Array<number>
+  private _httpErrors: Array<Error>
+
   constructor () {
     this._nbHttpCalls = 0
     this._nbResults = 0
@@ -39,61 +47,59 @@ class Spy {
     this._httpErrors = []
   }
 
-  get nbHTTPCalls () {
+  get nbHTTPCalls (): number {
     return this._nbHttpCalls
   }
 
-  get nbResults () {
+  get nbResults (): number {
     return this._nbResults
   }
 
-  get httpErrors () {
+  get httpErrors (): Array<Error> {
     return this._httpErrors
   }
 
-  get avgOverhead () {
+  get avgOverhead (): number {
     return this._overheads.reduce((x, y) => x + y, 0) / this._overheads.length
   }
 
-  get avgImportTime () {
+  get avgImportTime (): number {
     return this._importTimes.reduce((x, y) => x + y, 0) / this._importTimes.length
   }
 
-  get avgExportTime () {
+  get avgExportTime (): number {
     return this._exportTimes.reduce((x, y) => x + y, 0) / this._exportTimes.length
   }
 
-  get avgResponseTime () {
+  get avgResponseTime (): number {
     return this._responseTimes.reduce((x, y) => x + y, 0) / this._responseTimes.length
   }
 
-  reportHTTPRequest (count = 1) {
+  reportHTTPRequest (count = 1): void {
     this._nbHttpCalls += count
   }
 
-  reportHTTPError (err) {
+  reportHTTPError (err: Error) {
     this._httpErrors.push(err)
   }
 
-  reportSolution (count = 1) {
-    this._nbResults += 1
+  reportSolution (count: number = 1) {
+    this._nbResults += count
   }
 
-  reportHTTPResponseTime (time) {
+  reportHTTPResponseTime (time: number): void {
     this._responseTimes.push(time)
   }
 
-  reportOverhead (overhead) {
+  reportOverhead (overhead: number): void {
     this._overheads.push(overhead)
   }
 
-  reportImportTime (importTime) {
+  reportImportTime (importTime: number): void {
     this._importTimes.push(importTime)
   }
 
-  reportExportTime (exportTime) {
+  reportExportTime (exportTime: number): void {
     this._exportTimes.push(exportTime)
   }
 }
-
-module.exports = Spy

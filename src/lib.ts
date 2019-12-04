@@ -1,7 +1,7 @@
-/* file : sage-graph.js
+/* file : lib.ts
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2018-2020 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,41 +24,5 @@ SOFTWARE.
 
 'use strict'
 
-const { Graph } = require('sparql-engine')
-const SageRequestClient = require('./sage-request-client.js')
-const SageOperator = require('./operators/sage-operator.js')
-
-class SageGraph extends Graph {
-  constructor (url, spy = null) {
-    super()
-    this._url = url
-    this._spy = spy
-    this._httpClient = new SageRequestClient(this._url, this._spy)
-  }
-
-  insert () {
-    throw new Error('A Sage Graph is read-only: INSERT queries are not supported')
-  }
-
-  delete () {
-    throw new Error('A Sage Graph is read-only: DELETE queries are not supported')
-  }
-
-  evalBGP (bgp, options) {
-    return SageOperator(bgp, 'bgp', this._httpClient, options)
-  }
-
-  evalUnion (patterns, options) {
-    return SageOperator(patterns, 'union', this._httpClient, options)
-  }
-
-  open () {
-    this._httpClient.open()
-  }
-
-  close () {
-    this._httpClient.close()
-  }
-}
-
-module.exports = SageGraph
+export { default as Spy } from './spy'
+export { default as SageClient } from './client'

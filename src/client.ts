@@ -1,7 +1,7 @@
-/* file : client.js
+/* file : client.ts
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2018-2020 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,10 @@ SOFTWARE.
 
 'use strict'
 
-const { HashMapDataset, PlanBuilder, stages } = require('sparql-engine')
-const { finalize } = require('rxjs/operators')
-const SageGraph = require('./sage-graph.js')
-const SageBGPStageBuilder = require('./stages/sage-bgp-stage-builder.js')
+import { HashMapDataset, PlanBuilder, Pipeline, stages } from 'sparql-engine'
+import SageGraph from './sage-graph'
+import Spy from './spy'
+import SageBGPStageBuilder from './stages/sage-bgp-stage-builder'
 
 /**
  * A SageClient is used to evaluate SPARQL queries againt a SaGe server
@@ -49,30 +49,38 @@ const SageBGPStageBuilder = require('./stages/sage-bgp-stage-builder.js')
  *  }`
  * const iterator = client.execute(query)
  *
- * iterator.on('data', console.log)
- *
- * iterator.on('error', console.error)
- *
- * iterator.on('end', () => {
+ * iterator.subscribe(console.log, console.error, () => {
  *  console.log('Query execution finished')
  * })
  */
-class SageClient {
+export default class SageClient {
+  private readonly _url: string
+  private readonly _defaultGraph: string
+  private readonly _graph: SageGraph
+  private readonly _dataset: HashMapDataset
+  private readonly _spy: Spy | undefined
+  private readonly _builder: PlanBuilder
   /**
    * Constructor
    * @param {string} url - The url of the dataset to query
    */
-  constructor (url, spy = null) {
+  constructor (url: string, defaultGraph: string, spy?: Spy) {
     this._url = url
+    this._defaultGraph = defaultGraph
     this._spy = spy
-    this._graph = new SageGraph(url, this._spy)
-    this._dataset = new HashMapDataset(url, this._graph)
+    this._graph = new SageGraph(this._url, this._defaultGraph, this._spy)
+    this._dataset = new HashMapDataset(this._defaultGraph, this._graph)
     // set graph factory to create SageGraph on demand
     this._dataset.setGraphFactory(iri => {
       if (!iri.startsWith('http')) {
         throw new Error(`Invalid URL in SERVICE clause: ${iri}`)
       }
-      return new SageGraph(iri, this._spy)
+      if (!iri.includes('/sparql')) {
+        throw new Error('The requested server does not look like a valid SaGe server')
+      }
+      const index = iri.indexOf('/sparql')
+      const url = iri.substring(0, index + 7)
+      return new SageGraph(url, iri, this._spy)
     })
     this._builder = new PlanBuilder(this._dataset)
     // register the BGP stage builder for Sage context
@@ -81,13 +89,12 @@ class SageClient {
 
   /**
    * Build an iterator used to evaluate a SPARQL query against a SaGe server
-   * @param  {string} query - SPARQL query to evaluate
-   * @return {SparqlIterator} An iterator used to evaluates the query
+   * @param  query - SPARQL query to evaluate
+   * @return An iterator used to evaluates the query
    */
-  execute (query) {
+  execute (query: string) {
     this._graph.open()
-    return this._builder.build(query).pipe(finalize(() => this._graph.close()))
+    const pipeline: any = this._builder.build(query)
+    return Pipeline.getInstance().finalize(pipeline, () => this._graph.close())
   }
 }
-
-module.exports = SageClient

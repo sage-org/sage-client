@@ -1,7 +1,7 @@
 /* file : client-test.js
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2018-2020 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ SOFTWARE.
 'use strict'
 
 const expect = require('chai').expect
-const { SageClient } = require('../../src/lib.js')
+const { SageClient } = require('../../dist/lib.js')
 
 describe('SageClient', () => {
   it('should evaluate a simple SPARQL query', done => {
@@ -39,7 +39,7 @@ describe('SageClient', () => {
       FILTER LANGMATCHES(LANG(?title), 'EN')
       FILTER LANGMATCHES(LANG(?name),  'EN')
     }`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)
@@ -56,7 +56,7 @@ describe('SageClient', () => {
     SELECT * WHERE {
       ?s ?p ?o
     } LIMIT 10`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)
@@ -80,7 +80,7 @@ describe('SageClient', () => {
         dbo:birthPlace [ rdfs:label "York"@en ].
       OPTIONAL { ?person dbp:dateOfDeath ?deathDate. }
     }`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
     let nbBounded = 0
     const boundedDeathDate = new Map()
