@@ -1,19 +1,23 @@
 language: node_js
 node_js:
-  - node
+  - "13"
+  - "12"
+  - "10"
+  - "8"
 notifications:
   email: false
-before_script:
-  - npm run build-ts
-script:
-  - npm run test
-before_deploy:
-  - npm run build
-  - cp wdist/sage-client.bundle.js dist/
-deploy:
-- provider: npm
-  skip_cleanup: true
-  email: tminier01@gmail.com
-  api_key: $NPM_KEY
-  on:
-    tags: true
+cache: yarn
+script: yarn test
+jobs:
+  include:
+    - stage: npm release
+      script:
+        - yarn build
+        - cp wdist/sage-client.bundle.js dist/
+      node_js: "12"
+      provider: npm
+      skip_cleanup: true
+      email: tminier01@gmail.com
+      api_key: $NPM_KEY
+      on:
+        tags: true
