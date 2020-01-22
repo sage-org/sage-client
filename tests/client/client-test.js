@@ -39,7 +39,7 @@ describe('SageClient', () => {
       FILTER LANGMATCHES(LANG(?title), 'EN')
       FILTER LANGMATCHES(LANG(?name),  'EN')
     }`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://soyez-sage.univ-nantes.fr/sparql', 'http://soyez-sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)
@@ -56,7 +56,7 @@ describe('SageClient', () => {
     SELECT * WHERE {
       ?s ?p ?o
     } LIMIT 10`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://soyez-sage.univ-nantes.fr/sparql', 'http://soyez-sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)
@@ -80,7 +80,7 @@ describe('SageClient', () => {
         dbo:birthPlace [ rdfs:label "York"@en ].
       OPTIONAL { ?person dbp:dateOfDeath ?deathDate. }
     }`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://soyez-sage.univ-nantes.fr/sparql', 'http://soyez-sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
     let nbBounded = 0
     const boundedDeathDate = new Map()

@@ -36,13 +36,13 @@ describe('Service queries', () => {
     SELECT ?titleEng ?title
     WHERE {
       ?movie dbp:starring [ rdfs:label 'Natalie Portman'@en ].
-      SERVICE <http://sage.univ-nantes.fr/sparql/dbpedia-2015-04en> {
+      SERVICE <http://soyez-sage.univ-nantes.fr/sparql/dbpedia-2015-04en> {
         ?movie rdfs:label ?titleEng, ?title.
       }
       FILTER LANGMATCHES(LANG(?titleEng), 'en')
       FILTER (LANG(?title) != 'EN')
     }`
-    const client = new SageClient('http://sage.univ-nantes.fr/sparql', 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04')
+    const client = new SageClient('http://soyez-sage.univ-nantes.fr/sparql', 'http://soyez-sage.univ-nantes.fr/sparql/dbpedia-2016-04')
     const results = []
 
     const iterator = client.execute(query)

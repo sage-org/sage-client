@@ -8,7 +8,8 @@
     "sage-client": "bin/sage-client.js"
   },
   "scripts": {
-    "test": "tsc && mocha tests/**/*-test.js",
+    "pretest": "tsc",
+    "test": "mocha tests/**/*-test.js",
     "build": "webpack",
     "lint": "tslint -c ./tslint.json --fix src/*.ts src/**/*.ts",
     "build-ts": "tsc"
