@@ -15,9 +15,10 @@ jobs:
         - yarn build
         - cp wdist/sage-client.bundle.js dist/
       node_js: "12"
-      provider: npm
-      skip_cleanup: true
-      email: tminier01@gmail.com
-      api_key: $NPM_KEY
-      on:
-        tags: true
+      deploy:
+      - provider: npm
+        skip_cleanup: true
+        email: tminier01@gmail.com
+        api_key: $NPM_KEY
+        on:
+          tags: true
