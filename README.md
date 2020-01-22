@@ -62,7 +62,7 @@ SELECT ?movie ?title ?name WHERE {
 }`
 
 // Create a new SaGe client
-const client = new SageClient(server, defaultGraph, spy)
+const client = new SageClient(serverURL, defaultGraph, spy)
 
 // Execute the SPARQL query
 client.execute(query).subscribe(b => {
